@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 VERSION
 
-This documentation refers to version 1.0.44KFNKP of 
-Games::Cards::Poker, which was released on Tue Apr 20 15:23:20:25 2004.
+This documentation refers to version 1.0.44LCEw8 of 
+Games::Cards::Poker, which was released on Wed Apr 21 12:14:58:08 2004.
 
 SYNOPSIS
 
@@ -74,7 +74,7 @@ ShortHand(@hand)
 Returns a scalar string containing the abbreviated Poker description
 of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
-ShortHand() calls SortCards() on it's parameter before doing to 
+ShortHand() calls SortCards() on it's parameter before doing the
 abbreviation to make sure that the return value is consistent.
 
 SlowScoreHand(@hand)
@@ -94,7 +94,7 @@ behavior.
 HandScore($scor)
 
 This function is the opposite of ScoreHand().  It takes an integer
-score paramter && returns the corresponding ShortHand string.
+score parameter && returns the corresponding ShortHand string.
 
 HandScore() uses a fully enumerated table to just index the
 associated ShortHand so it should be quite fast.  The table was 
@@ -110,34 +110,36 @@ version, you can call the UseSlow() function to make ScoreHand()
 actually call SlowScoreHand() instead of just indexing the answer
 score in a hash.
 
-UseSlow([$new_slow_flag])
+UseSlow([$slow])
 
 UseSlow() is a function provided in case you'd prefer to actually 
 employ the SlowScoreHand() function whenever you call ScoreHand().
 
-UseSlow() takes an optional $new_slow_flag value.  If you don't 
-provide $new_slow_flag, UseSlow() will toggle the slow state.
+UseSlow() takes an optional $slow value.  If you don't 
+provide $slow, UseSlow() will toggle the slow state.
 
 UseSlow() always returns the current state of whether 
 SlowScoreHand() is being used whenever ScoreHand() is called.
 
-BestHoldEmIndices(@hole, @board)
+BestIndices(@cards)
 
-BestHoldEmIndices() takes 5, 6, or 7 cards && returns an array of the
-indices of the 5 cards (hand) which yield the best score.
+BestIndices() takes 5 or more cards (normally 7) which can be
+split among separate arrays (like BestIndices(@hole, @bord) for
+Hold'Em) && returns an array of the indices of the 5 cards (hand)
+which yield the best score.
 
-BestHoldEmHand(@best, @hole, @board)
+BestHand(@best, @cards)
 
-BestHoldEmHand() takes the return value of BestHoldEmIndices() as the
+BestHand() takes the return value of BestIndices() as the
 first parameter (which is an array of the best indices) && then the
-same other parameters (@hole && @board) to give you a copy of just
-the best cards.  The return value of this function can be passed to
-ScoreHand() to get the score of the best hand in HoldEm.
+same other parameters (@cards) or (@hole, @bord) to give you a copy
+of just the best cards.  The return value of this function can be
+passed to ScoreHand() to get the score of the best hand.
 
-BestHoldEmHand() can optionally take just the @hole && @board like
-BestHoldEmIndices() && it will automagically call BestHoldEmIndices()
+BestHand() can optionally take just the @cards like
+BestIndices() && it will automagically call BestIndices()
 first to obtain @best.  It will then return copies of those indexed
-cards from the @hole && @board.
+cards from the @cards.
 
 WHY?
 
@@ -183,6 +185,13 @@ me any suggestions or coding tips or notes of appreciation
 CHANGES
 
 Revision history for Perl extension Games::Cards::Poker:
+
+- 1.0.44LCEw8  Wed Apr 21 12:14:58:08 2004
+
+* s/HoldEm//g; on advice from Joe since Best*() are useful for more
+    than just Hold'Em (like 7-card stud)
+
+* fixed minor typos in POD
 
 - 1.0.44KFNKP  Tue Apr 20 15:23:20:25 2004
 

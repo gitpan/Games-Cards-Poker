@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # 44KDCFi - benchmrk.pl created by Pip Stuart <Pip@CPAN.Org> to compare
-#     Games::Cards::Poker BestHoldEmIndices() + ScoreHand() speed versus
+#     Games::Cards::Poker BestIndices() + ScoreHand() speed versus
 #     Best() + Scor().
 # Notz:
 #   On my P3-800MHz 768MB:
@@ -46,7 +46,7 @@ printf("SlowPTb4:$ptb4 expand:%s\n", $ptb4->expand());
 $coun = 0;
 while($coun++ < $limt) { # limit not reached
   if($hbrd = $choo->next()) { # test hole + board SLOW
-    @hand = BestHoldEmHand(@{$hbrd});
+    @hand = BestHand(@{$hbrd});
   }
 }
 $ptaf = Time::PT->new();
@@ -60,7 +60,7 @@ printf("FastPTb4:$ptb4 expand:%s\n", $ptb4->expand());
 $coun = 0;
 while($coun++ < $limt) { # limit not reached
   if($hbrd = $choo->next()) { # test hole + board FAST
-    @hand = BestHoldEmHand(@{$hbrd});
+    @hand = BestHand(@{$hbrd});
   }
 }
 $ptaf = Time::PT->new();

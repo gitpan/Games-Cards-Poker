@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 =head1 VERSION
 
-This documentation refers to version 1.0.44KFNKP of 
-Games::Cards::Poker, which was released on Tue Apr 20 15:23:20:25 2004.
+This documentation refers to version 1.0.44LCEw8 of 
+Games::Cards::Poker, which was released on Wed Apr 21 12:14:58:08 2004.
 
 =head1 SYNOPSIS
 
@@ -78,7 +78,7 @@ in place && the return value need not be reassigned.
 Returns a scalar string containing the abbreviated Poker description
 of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
-ShortHand() calls SortCards() on it's parameter before doing to 
+ShortHand() calls SortCards() on it's parameter before doing the
 abbreviation to make sure that the return value is consistent.
 
 =head2 SlowScoreHand(@hand)
@@ -98,7 +98,7 @@ behavior.
 =head2 HandScore($scor)
 
 This function is the opposite of ScoreHand().  It takes an integer
-score paramter && returns the corresponding ShortHand string.
+score parameter && returns the corresponding ShortHand string.
 
 HandScore() uses a fully enumerated table to just index the
 associated ShortHand so it should be quite fast.  The table was 
@@ -114,34 +114,36 @@ version, you can call the UseSlow() function to make ScoreHand()
 actually call SlowScoreHand() instead of just indexing the answer
 score in a hash.
 
-=head2 UseSlow([$new_slow_flag])
+=head2 UseSlow([$slow])
 
 UseSlow() is a function provided in case you'd prefer to actually 
 employ the SlowScoreHand() function whenever you call ScoreHand().
 
-UseSlow() takes an optional $new_slow_flag value.  If you don't 
-provide $new_slow_flag, UseSlow() will toggle the slow state.
+UseSlow() takes an optional $slow value.  If you don't 
+provide $slow, UseSlow() will toggle the slow state.
 
 UseSlow() always returns the current state of whether 
 SlowScoreHand() is being used whenever ScoreHand() is called.
 
-=head2 BestHoldEmIndices(@hole, @board)
+=head2 BestIndices(@cards)
 
-BestHoldEmIndices() takes 5, 6, or 7 cards && returns an array of the
-indices of the 5 cards (hand) which yield the best score.
+BestIndices() takes 5 or more cards (normally 7) which can be
+split among separate arrays (like BestIndices(@hole, @bord) for
+Hold'Em) && returns an array of the indices of the 5 cards (hand)
+which yield the best score.
 
-=head2 BestHoldEmHand(@best, @hole, @board)
+=head2 BestHand(@best, @cards)
 
-BestHoldEmHand() takes the return value of BestHoldEmIndices() as the
+BestHand() takes the return value of BestIndices() as the
 first parameter (which is an array of the best indices) && then the
-same other parameters (@hole && @board) to give you a copy of just
-the best cards.  The return value of this function can be passed to
-ScoreHand() to get the score of the best hand in HoldEm.
+same other parameters (@cards) or (@hole, @bord) to give you a copy
+of just the best cards.  The return value of this function can be
+passed to ScoreHand() to get the score of the best hand.
 
-BestHoldEmHand() can optionally take just the @hole && @board like
-BestHoldEmIndices() && it will automagically call BestHoldEmIndices()
+BestHand() can optionally take just the @cards like
+BestIndices() && it will automagically call BestIndices()
 first to obtain @best.  It will then return copies of those indexed
-cards from the @hole && @board.
+cards from the @cards.
 
 =head1 WHY?
 
@@ -189,6 +191,13 @@ me any suggestions or coding tips or notes of appreciation
 Revision history for Perl extension Games::Cards::Poker:
 
 =over 4
+
+=item - 1.0.44LCEw8  Wed Apr 21 12:14:58:08 2004
+
+* s/HoldEm//g; on advice from Joe since Best*() are useful for more
+    than just Hold'Em (like 7-card stud)
+
+* fixed minor typos in POD
 
 =item - 1.0.44KFNKP  Tue Apr 20 15:23:20:25 2004
 
@@ -273,9 +282,9 @@ use base qw(Exporter);# Games::Cards);
 use Math::BaseCnv  qw(:all);
 use Algorithm::ChooseSubsets;
 
-our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand SlowScoreHand
-                      BestHoldEmIndices BestHoldEmHand HandScore UseSlow);
-our $VERSION     = '1.0.44KFNKP'; # major . minor . PipTimeStamp
+our @EXPORT      = qw(Shuffle Deck SortCards    ShortHand ScoreHand UseSlow
+                      BestIndices  BestHand SlowScoreHand HandScore);
+our $VERSION     = '1.0.44LCEw8'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major and minor
 # See http://Ax9.Org/pt?$PTVR and `perldoc Time::PT`
 
@@ -569,7 +578,7 @@ sub SlowScoreHand { # takes 1 ShortHand or 5 cards && returns Poker hand score
   return($scor);
 }
 
-sub BestHoldEmIndices { # takes 5+ cards (7) && returns indices of the best 5
+sub BestIndices { # takes 5+ cards (7) && returns indices of the best 5
   my @crdz = @_; return(0) unless(@crdz >= 5); my @best = (); my @bhnd = ();
   my $choo = Algorithm::ChooseSubsets->new(scalar(@crdz), 5);
   while(my $choi = $choo->next()) {
@@ -585,12 +594,12 @@ sub BestHoldEmIndices { # takes 5+ cards (7) && returns indices of the best 5
   return(@best);
 }
 
-sub BestHoldEmHand { # takes return value of BestHoldEmIndices() && all cards
+sub BestHand { # takes return value of BestIndices() && all cards
   my @best = (shift, shift, shift, shift, shift); # get best indices
   my @crdz = @_;
   if(@crdz <= 2) { # if only 7 params given, pass onto Indices first
     unshift(@crdz, @best);
-    @best = BestHoldEmIndices(@crdz);
+    @best = BestIndices(@crdz);
   }
   return(0) unless(@best == 5 && @crdz >= 5); # ck for valid sizes
   my @hand = (); push(@hand, $crdz[$_]) foreach(@best); # copy best cards
@@ -1688,9 +1697,9 @@ sub ScoreHand { # returns the score of the passed in @hand or ShortHand
 }
 
 sub UseSlow { # toggles the use of SlowScoreHand() instead of ScoreHand()
-  if(@_) { $slow = shift(); } # $new_slow_flag given as param
-  else   { $slow ^= 1;      } # no param so just toggle
-  return($slow);
+  if(@_) { $slow  = shift(); } # $slow given as param
+  else   { $slow ^= 1;       } # no param so just toggle
+  return(  $slow  );
 }
 
 127;
