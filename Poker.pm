@@ -3,12 +3,12 @@
 
 =head1 NAME
 
-Games::Cards::Poker - Perl Poker functions
+Games::Cards::Poker - Pure Perl Poker functions
 
 =head1 VERSION
 
-This documentation refers to version 1.0.44LCEw8 of 
-Games::Cards::Poker, which was released on Wed Apr 21 12:14:58:08 2004.
+This documentation refers to version 1.0.44P0KER of 
+Games::Cards::Poker, which was released on Sun Apr 25 00:20:14:27 2004.
 
 =head1 SYNOPSIS
 
@@ -19,12 +19,12 @@ Games::Cards::Poker, which was released on Wed Apr 21 12:14:58:08 2004.
   my $hand_size = 5; # number of cards to deal to each player
   my @hands     = ();# player hand data
   my @deck      = Shuffle(Deck());
-  for(my $pndx = 0; $pndx < $players; $pndx++) {     # players
-    for(my $cndx = 0; $cndx < $hand_size; $cndx++) { # cards
-      push(@{$hands[$pndx]}, pop(@deck));
+  while($players--) {
+    foreach(1..$hand_size) {
+      push(@{$hands[$players]}, pop(@deck));
     }
-    printf("Player%d score:%4d hand:@{$hands[$pndx]}\n", 
-      $pndx, ScoreHand(@{$hands[$pndx]}));
+    printf("Player%d score:%4d hand:@{$hands[$players]}\n", 
+      $players, ScoreHand(@{$hands[$players]}));
   }
 
 =head1 DESCRIPTION
@@ -36,8 +36,6 @@ or simulations.
 =head1 2DO
 
 =over 2
-
-=item - mk up sim XML data file format (w/ RELAX NG?)
 
 =item - mk Games::Cards compatability object interface
 
@@ -52,8 +50,10 @@ or simulations.
 =head2 Deck()
 
 Returns a new array of scalars with the abbreviated Poker names of
-cards (eg. 'As' eq 'Ace of Spades', 'Td' eq 'Ten of Diamonds', 
-'2c' eq 'Two of Clubs', etc.).
+cards (eg. 'As' for 'Ace of Spades', 'Td' for 'Ten of Diamonds', 
+'2c' for 'Two of Clubs', etc.).
+
+Use CardName() to expand abbreviated cards into their full names.
 
 =head2 Shuffle(@cards)
 
@@ -66,12 +66,15 @@ in place && the return value need not be reassigned.
 
 =head2 SortCards(@cards)
 
-Sorts the passed in @cards array.  SortCards() 
-returns a sorted copy of the @cards array.
+Sorts the passed in @cards array.  SortCards() returns a sorted copy
+of the @cards array.
 
 SortCards() can also take an arrayref parameter instead of an explicit
 @cards array in which case, the passed in arrayref will be sorted
 in place && the return value need not be reassigned.
+
+SortCards() works consistently on the return values of ShortHand()
+as well as abbreviated cards (eg. 'AAA', 'AAK'..'AKQs', 'AKQ'..'222').
 
 =head2 ShortHand(@hand)
 
@@ -80,6 +83,12 @@ of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
 ShortHand() calls SortCards() on it's parameter before doing the
 abbreviation to make sure that the return value is consistent.
+
+ShortHand() can be called on fewer cards than a full @hand of 5 to
+obtain other useful abbreviations (eg. ShortHand(@hole) will return
+the abbreviated form of a player's two hole [pocket] cards or
+ShortHand(@flop) will abbreviate the three community cards which
+flop onto the board in Texas Hold'Em).
 
 =head2 SlowScoreHand(@hand)
 
@@ -95,10 +104,10 @@ It should be easy to use ScoreHand() as a first pass where ties can
 be resolved by another suit-comparison function if you want such 
 behavior.
 
-=head2 HandScore($scor)
+=head2 HandScore($score)
 
 This function is the opposite of ScoreHand().  It takes an integer
-score parameter && returns the corresponding ShortHand string.
+$score parameter && returns the corresponding ShortHand string.
 
 HandScore() uses a fully enumerated table to just index the
 associated ShortHand so it should be quite fast.  The table was 
@@ -128,7 +137,7 @@ SlowScoreHand() is being used whenever ScoreHand() is called.
 =head2 BestIndices(@cards)
 
 BestIndices() takes 5 or more cards (normally 7) which can be
-split among separate arrays (like BestIndices(@hole, @bord) for
+split among separate arrays (like BestIndices(@hole, @board) for
 Hold'Em) && returns an array of the indices of the 5 cards (hand)
 which yield the best score.
 
@@ -136,7 +145,7 @@ which yield the best score.
 
 BestHand() takes the return value of BestIndices() as the
 first parameter (which is an array of the best indices) && then the
-same other parameters (@cards) or (@hole, @bord) to give you a copy
+same other parameters (@cards) or (@hole, @board) to give you a copy
 of just the best cards.  The return value of this function can be
 passed to ScoreHand() to get the score of the best hand.
 
@@ -144,6 +153,28 @@ BestHand() can optionally take just the @cards like
 BestIndices() && it will automagically call BestIndices()
 first to obtain @best.  It will then return copies of those indexed
 cards from the @cards.
+
+=head2 CardName($card)
+
+CardName() takes an abbreviated card (eg. 'As', 'Kh', '2c') && 
+returns the expanded full name of the card ('Ace of Spades', 
+'King of Hearts', 'Two of Clubs').
+
+=head2 NameCard($name)
+
+NameCard() does the opposite of CardName() by taking an expanded 
+full name (eg. 'Queen of Diamonds', 'Jack of Hearts', 'Ten of Clubs')
+&& returns the abbreviated card (eg. 'Qd', 'Jh', 'Tc').
+
+=head2 HandName($score)
+
+HandName() takes a HandScore() parameter && returns the name of
+the corresponding scoring category it falls under (eg. 'Royal Flush',
+'Three-of-a-Kind', 'High Card').
+
+HandName() can optionally accept an arrayref to a hand, the @hand
+itself, or a ShortHand instead of the $score parameter to find out
+the HandName of any of those.
 
 =head1 WHY?
 
@@ -164,8 +195,8 @@ B64 notes: Cards map perfectly into A..Z,a..z so += 10 for only letter rep
             1.Ah 5.Kh 9.Qh D.Jh H.Th L.9h P.8h T.7h X.6h b.5h f.4h j.3h n.2h
             2.Ad 6.Kd A.Qd E.Jd I.Td M.9d Q.8d U.7d Y.6d c.5d g.4d k.3d o.2d
             3.Ac 7.Kc B.Qc F.Jc J.Tc N.9c R.8c V.7c Z.6c d.5c h.4c l.3c p.2c
-    Values:   0    1    2    3    4    5    6    7    8    9    A    B    C 
- B64 Cards: 0.As   1.Ah   2.Ad   3.Ac       Values: 0
+     Ranks:   0    1    2    3    4    5    6    7    8    9    A    B    C 
+ B64 Cards: 0.As   1.Ah   2.Ad   3.Ac        Ranks: 0
             4.Ks   5.Kh   6.Kd   7.Kc               1
             8.Qs   9.Qh   A.Qd   B.Qc               2
             C.Js   D.Jh   E.Jd   F.Jc               3
@@ -191,6 +222,18 @@ me any suggestions or coding tips or notes of appreciation
 Revision history for Perl extension Games::Cards::Poker:
 
 =over 4
+
+=item - 1.0.44P0KER  Sun Apr 25 00:20:14:27 2004
+
+* made CardName() to return 'Ace of Spades' or 'Two of Clubs' for
+          'As'or'A' or '2c'or'z' && NameCard() to do inverse
+
+* made HandName() to return 'Royal Flush' or 'High Card' for
+          ScoreHand() or ShortHand() or @hand or \@hand && NameHand()
+
+* rewrote SortCards() to accept any length ShortHand() params
+
+* s/valu/rank/g s/scor/score/g s/bord/board/g
 
 =item - 1.0.44LCEw8  Wed Apr 21 12:14:58:08 2004
 
@@ -282,24 +325,27 @@ use base qw(Exporter);# Games::Cards);
 use Math::BaseCnv  qw(:all);
 use Algorithm::ChooseSubsets;
 
-our @EXPORT      = qw(Shuffle Deck SortCards    ShortHand ScoreHand UseSlow
-                      BestIndices  BestHand SlowScoreHand HandScore);
-our $VERSION     = '1.0.44LCEw8'; # major . minor . PipTimeStamp
+our @EXPORT      = qw(Shuffle Deck SortCards    ShortHand ScoreHand CardName
+     UseSlow HandName BestIndices  BestHand SlowScoreHand HandScore NameCard);
+our $VERSION     = '1.0.44P0KER'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major and minor
 # See http://Ax9.Org/pt?$PTVR and `perldoc Time::PT`
 
-# value progression, suit progression
-my @vprg = ('A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2');
+# rank progression, suit progression
+my @rprg = ('A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2');
 my @sprg = ('s', 'h', 'd', 'c'); # Spade, Heart, Diamond, Club  (Club, Diam)?
-my %vprv; for(my $indx=0; $indx<@vprg; $indx++) { $vprv{$vprg[$indx]} = $indx;}
-my @hndz = (); my %scrh = (); # array && hash for faster ShortHand => scor
+my @rnam = ('Ace',   'King', 'Queen', 'Jack', 'Ten',   'Nine', 'Eight', 
+            'Seven', 'Six',  'Five',  'Four', 'Three', 'Two'); # Rank Names
+my @snam = ('Spades', 'Hearts', 'Diamonds', 'Clubs');          # Suit Names
+my %rprv; foreach my $indx (0..$#rprg) { $rprv{$rprg[$indx]} = $indx; }
+my @hndz = (); my %scrh = (); # array && hash for faster ShortHand => score
 my $slow = 0; # UseSlow() flag to use SlowScoreHand() instead of ScoreHand()
 
 sub Deck { # return an array of cards as a whole new deck in clean new order
   my @deck = ();
-  foreach my $valu (@vprg) {
+  foreach my $rank (@rprg) {
     foreach my $suit (@sprg) {
-      push(@deck, "$valu$suit");
+      push(@deck, "$rank$suit");
     }
   }
   return(@deck);
@@ -326,9 +372,22 @@ sub SortCards { # takes an arrayref or list of cards to sort
   my $aref = 0; my @data = @_;
   if($aflg) { $aref = $_[0];  }
   else      { $aref = \@data; }
+# what needs to sort:
+#  'A'..'2'
+#  'As'..'Ac'
+#  'AA','AKs','AK'..'A2'
+#  'AAA','AAK'..'AKQs','AKQ'..'222'
+#  'AAAAK','AAAAQ'..'AKQJTs','AKQJT'..'32222' # based on rank values not scores
   @{$aref} = sort {
-    my $suba = substr($a, 0, 1);
-    my $subb = substr($b, 0, 1);
+    my $indx = 0;
+    my $suba = 0; 
+    my $subb = 0;
+    while($suba eq $subb && $indx < length($a)
+                         && $indx < length($b)) {
+      $suba = substr($a, $indx, 1);
+      $subb = substr($b, $indx, 1);
+      $indx++;
+    } # find first different char
     if   ($suba eq 'A' && $subb ne 'A') { return(-1); }
     elsif($suba ne 'A' && $subb eq 'A') { return( 1); }
     elsif($suba eq 'K' && $subb ne 'K') { return(-1); }
@@ -340,19 +399,9 @@ sub SortCards { # takes an arrayref or list of cards to sort
     elsif($suba eq 'T' && $subb ne 'T') { return(-1); }
     elsif($suba ne 'T' && $subb eq 'T') { return( 1); }
     elsif($suba eq $subb)               { 
-      $suba = substr($a, 1, 1);
-      $subb = substr($b, 1, 1);
-      if   ($suba eq 'A' && $subb ne 'A') { return(-1); }
-      elsif($suba ne 'A' && $subb eq 'A') { return( 1); }
-      elsif($suba eq 'K' && $subb ne 'K') { return(-1); }
-      elsif($suba ne 'K' && $subb eq 'K') { return( 1); }
-      elsif($suba eq 'Q' && $subb ne 'Q') { return(-1); }
-      elsif($suba ne 'Q' && $subb eq 'Q') { return( 1); }
-      elsif($suba eq 'J' && $subb ne 'J') { return(-1); }
-      elsif($suba ne 'J' && $subb eq 'J') { return( 1); }
-      elsif($suba eq 'T' && $subb ne 'T') { return(-1); }
-      elsif($suba ne 'T' && $subb eq 'T') { return( 1); }
-      else                                { return($b cmp $a); }
+      if   (length($a) >  $indx) { return(-1); }
+      elsif(length($b) >  $indx) { return( 1); }
+      else                       { return( 0); }
     } else                              { return($b cmp $a); }
   } @{$aref};
   if($aflg) { return($aref); }
@@ -368,7 +417,8 @@ sub ShortHand { # takes an arrayref or list of cards to abbrev.
   SortCards($aref) unless(@{$aref} == 1); # make sure cards are sorted first
   foreach(@{$aref}) { 
     $shrt .=      substr($_, 0, 1); 
-    $suit  = 0 if(substr($_, 1, 1) ne substr($aref->[0], 1, 1));
+    $suit  = 0 if($suit && (length($_) < 2 ||
+                  substr($_, 1, 1) ne substr($aref->[0], 1, 1)));
   }
   $shrt .= 's' if($suit);
   return($shrt);
@@ -385,12 +435,12 @@ sub SlowScoreHand { # takes 1 ShortHand or 5 cards && returns Poker hand score
   SortCards($aref) unless(@{$aref} == 1);
   for(my $indx=0; $indx<5; $indx++) {
     if(@{$aref} == 1) {
-      ($data[$indx]{'valu'}, $data[$indx]{'suit'}) = (substr($aref->[0], $indx, 1), 's');
+      ($data[$indx]{'rank'}, $data[$indx]{'suit'}) = (substr($aref->[0], $indx, 1), 's');
     } else {
-      ($data[$indx]{'valu'}, $data[$indx]{'suit'}) = split(//, $aref->[$indx]);
+      ($data[$indx]{'rank'}, $data[$indx]{'suit'}) = split(//, $aref->[$indx]);
     }
   } 
-  # make data unsuited if ShortHand param only had 5 values (no 's' on the end)
+  # make data unsuited if ShortHand param only had 5 ranks (no 's' on the end)
   $data[0]{'suit'} = 'h' if(@{$aref} == 1 && length($aref->[0]) == 5);
 #  Hand            ScoreRange  Size  Description
 #--------------------------------------------------------
@@ -406,61 +456,61 @@ sub SlowScoreHand { # takes 1 ShortHand or 5 cards && returns Poker hand score
 #  High Card       6185..7461  1277  (13 choose 5) - 9
 
 #  general straight test
-  if     (@vprg            >         ( $vprv{$data[1]{'valu'}} + 1 )   &&
-          $data[2]{'valu'} eq $vprg[ ( $vprv{$data[1]{'valu'}} + 1 ) ] &&
-          @vprg            >         ( $vprv{$data[1]{'valu'}} + 2 )   &&
-          $data[3]{'valu'} eq $vprg[ ( $vprv{$data[1]{'valu'}} + 2 ) ] &&
-          @vprg            >         ( $vprv{$data[1]{'valu'}} + 3 )   &&
-          $data[4]{'valu'} eq $vprg[ ( $vprv{$data[1]{'valu'}} + 3 ) ] &&
-        ((                             $vprv{$data[1]{'valu'}}         &&
-          $data[0]{'valu'} eq $vprg[ ( $vprv{$data[1]{'valu'}} - 1 ) ] ) ||
-         ($data[0]{'valu'} eq 'A' && $data[1]{'valu'} eq '5'))) { $strt = 1; }
+  if     (@rprg            >         ( $rprv{$data[1]{'rank'}} + 1 )   &&
+          $data[2]{'rank'} eq $rprg[ ( $rprv{$data[1]{'rank'}} + 1 ) ] &&
+          @rprg            >         ( $rprv{$data[1]{'rank'}} + 2 )   &&
+          $data[3]{'rank'} eq $rprg[ ( $rprv{$data[1]{'rank'}} + 2 ) ] &&
+          @rprg            >         ( $rprv{$data[1]{'rank'}} + 3 )   &&
+          $data[4]{'rank'} eq $rprg[ ( $rprv{$data[1]{'rank'}} + 3 ) ] &&
+        ((                             $rprv{$data[1]{'rank'}}         &&
+          $data[0]{'rank'} eq $rprg[ ( $rprv{$data[1]{'rank'}} - 1 ) ] ) ||
+         ($data[0]{'rank'} eq 'A' && $data[1]{'rank'} eq '5'))) { $strt = 1; }
 #  general flush    test
   if     ($data[0]{'suit'} eq $data[1]{'suit'} &&
           $data[0]{'suit'} eq $data[2]{'suit'} &&
           $data[0]{'suit'} eq $data[3]{'suit'} &&
           $data[0]{'suit'} eq $data[4]{'suit'})                 { $flsh = 1; }
 #  Royal    Flush     0           1  only one
-  if     ($data[1]{'valu'} eq 'K' && $strt && $flsh) {
+  if     ($data[1]{'rank'} eq 'K' && $strt && $flsh) {
     $scor = 0;
 #  Straight Flush     1..   9     9  King High through 5 High
   } elsif($strt && $flsh) {
-    $scor =       $vprv{$data[0]{'valu'}};
-    $scor =  9 if(      $data[0]{'valu'} eq 'A' &&
-                        $data[1]{'valu'} eq '5');
+    $scor =       $rprv{$data[0]{'rank'}};
+    $scor =  9 if(      $data[0]{'rank'} eq 'A' &&
+                        $data[1]{'rank'} eq '5');
 #  Four-of-a-Kind    10.. 165   156  (13 choose 2) * 2
-  } elsif($data[1]{'valu'} eq $data[2]{'valu'} &&
-          $data[1]{'valu'} eq $data[3]{'valu'} &&
-         ($data[1]{'valu'} eq $data[4]{'valu'} ||
-          $data[1]{'valu'} eq $data[0]{'valu'})) {
-    if($data[1]{'valu'} eq $data[0]{'valu'}) { # xxxx y
-      $set0 = $vprv{$data[0]{'valu'}};
-      $xtr0 = $vprv{$data[4]{'valu'}} - 1;
+  } elsif($data[1]{'rank'} eq $data[2]{'rank'} &&
+          $data[1]{'rank'} eq $data[3]{'rank'} &&
+         ($data[1]{'rank'} eq $data[4]{'rank'} ||
+          $data[1]{'rank'} eq $data[0]{'rank'})) {
+    if($data[1]{'rank'} eq $data[0]{'rank'}) { # xxxx y
+      $set0 = $rprv{$data[0]{'rank'}};
+      $xtr0 = $rprv{$data[4]{'rank'}} - 1;
     } else {                                   # x yyyy
-      $set0 = $vprv{$data[4]{'valu'}};
-      $xtr0 = $vprv{$data[0]{'valu'}};
+      $set0 = $rprv{$data[4]{'rank'}};
+      $xtr0 = $rprv{$data[0]{'rank'}};
     }
     $scor = (10 + ($set0 * 12) + $xtr0);
 #  Full House       166.. 321   156  (13 choose 2) * 2
-  } elsif($data[0]{'valu'} eq $data[1]{'valu'} &&
-          $data[3]{'valu'} eq $data[4]{'valu'} &&
-         ($data[0]{'valu'} eq $data[2]{'valu'} ||
-          $data[3]{'valu'} eq $data[2]{'valu'})) {
-    if($data[0]{'valu'} eq $data[2]{'valu'}) { # xxx yy
-      $set0 = $vprv{$data[0]{'valu'}};
-      $set1 = $vprv{$data[4]{'valu'}} - 1;
+  } elsif($data[0]{'rank'} eq $data[1]{'rank'} &&
+          $data[3]{'rank'} eq $data[4]{'rank'} &&
+         ($data[0]{'rank'} eq $data[2]{'rank'} ||
+          $data[3]{'rank'} eq $data[2]{'rank'})) {
+    if($data[0]{'rank'} eq $data[2]{'rank'}) { # xxx yy
+      $set0 = $rprv{$data[0]{'rank'}};
+      $set1 = $rprv{$data[4]{'rank'}} - 1;
     } else {                                   # xx yyy
-      $set0 = $vprv{$data[4]{'valu'}};
-      $set1 = $vprv{$data[0]{'valu'}};
+      $set0 = $rprv{$data[4]{'rank'}};
+      $set1 = $rprv{$data[0]{'rank'}};
     }
     $scor = (166 + ($set0 * 12) + $set1);
 #           Flush   322..1598  1277  (13 choose 5) - 9
   } elsif($flsh) {
-    $xtr0 = $vprv{$data[0]{'valu'}};
-    $xtr1 = $vprv{$data[1]{'valu'}};
-    $xtr2 = $vprv{$data[2]{'valu'}};
-    $xtr3 = $vprv{$data[3]{'valu'}};
-    $xtr4 = $vprv{$data[4]{'valu'}} - $xtr3;
+    $xtr0 = $rprv{$data[0]{'rank'}};
+    $xtr1 = $rprv{$data[1]{'rank'}};
+    $xtr2 = $rprv{$data[2]{'rank'}};
+    $xtr3 = $rprv{$data[3]{'rank'}};
+    $xtr4 = $rprv{$data[4]{'rank'}} - $xtr3;
     $scor = 322;
     $scor-- if($xtr0);
     $scor++ if($xtr1 ==  9);
@@ -472,84 +522,84 @@ sub SlowScoreHand { # takes 1 ShortHand or 5 cards && returns Poker hand score
                          $scor += (           $xtr4      - 2);
 #  Straight        1599..1608    10  King High through 5 High
   } elsif($strt) {
-    $scor = (1599 +  $vprv{$data[0]{'valu'}});
-    $scor =  1608 if(      $data[0]{'valu'} eq 'A' &&
-                           $data[1]{'valu'} eq '5');
+    $scor = (1599 +  $rprv{$data[0]{'rank'}});
+    $scor =  1608 if(      $data[0]{'rank'} eq 'A' &&
+                           $data[1]{'rank'} eq '5');
 #  Three-of-a-Kind 1609..2466   858  (13 choose 3) * 3
-  } elsif(($data[0]{'valu'} eq $data[1]{'valu'} &&
-           $data[0]{'valu'} eq $data[2]{'valu'}) || # xxx y z
-          ($data[1]{'valu'} eq $data[2]{'valu'} &&
-           $data[2]{'valu'} eq $data[3]{'valu'}) || # x yyy z
-          ($data[2]{'valu'} eq $data[3]{'valu'} &&
-           $data[3]{'valu'} eq $data[4]{'valu'})) { # x y zzz
-    if     ($data[0]{'valu'} eq $data[2]{'valu'}) { # xxx y z
-      $set0 = $vprv{$data[0]{'valu'}};
-      $xtr0 = $vprv{$data[3]{'valu'}} - 1;
-      $xtr1 = $vprv{$data[4]{'valu'}} - 2;
-    } elsif($data[1]{'valu'} eq $data[3]{'valu'}) { # x yyy z
-      $xtr0 = $vprv{$data[0]{'valu'}};
-      $set0 = $vprv{$data[1]{'valu'}};
-      $xtr1 = $vprv{$data[4]{'valu'}} - 2;
+  } elsif(($data[0]{'rank'} eq $data[1]{'rank'} &&
+           $data[0]{'rank'} eq $data[2]{'rank'}) || # xxx y z
+          ($data[1]{'rank'} eq $data[2]{'rank'} &&
+           $data[2]{'rank'} eq $data[3]{'rank'}) || # x yyy z
+          ($data[2]{'rank'} eq $data[3]{'rank'} &&
+           $data[3]{'rank'} eq $data[4]{'rank'})) { # x y zzz
+    if     ($data[0]{'rank'} eq $data[2]{'rank'}) { # xxx y z
+      $set0 = $rprv{$data[0]{'rank'}};
+      $xtr0 = $rprv{$data[3]{'rank'}} - 1;
+      $xtr1 = $rprv{$data[4]{'rank'}} - 2;
+    } elsif($data[1]{'rank'} eq $data[3]{'rank'}) { # x yyy z
+      $xtr0 = $rprv{$data[0]{'rank'}};
+      $set0 = $rprv{$data[1]{'rank'}};
+      $xtr1 = $rprv{$data[4]{'rank'}} - 2;
     } else {                                        # x y zzz
-      $xtr0 = $vprv{$data[0]{'valu'}};
-      $xtr1 = $vprv{$data[1]{'valu'}} - 1;
-      $set0 = $vprv{$data[2]{'valu'}};
+      $xtr0 = $rprv{$data[0]{'rank'}};
+      $xtr1 = $rprv{$data[1]{'rank'}} - 1;
+      $set0 = $rprv{$data[2]{'rank'}};
     }
     $scor = (1609 +
              (      $set0  * summ(  11 )) +
              ((12 * $xtr0) - summ($xtr0)) +
              (      $xtr1  -      $xtr0 ));
 #  Two Pair        2467..3324   858  (13 choose 3) * 3
-  } elsif(($data[0]{'valu'} eq $data[1]{'valu'} &&
-           $data[2]{'valu'} eq $data[3]{'valu'}) || # xx yy z
-          ($data[0]{'valu'} eq $data[1]{'valu'} &&
-           $data[3]{'valu'} eq $data[4]{'valu'}) || # xx y zz
-          ($data[1]{'valu'} eq $data[2]{'valu'} &&
-           $data[3]{'valu'} eq $data[4]{'valu'})) { # x yy zz
-    if($data[0]{'valu'} eq $data[1]{'valu'}) {      # xx
-      if($data[2]{'valu'} eq $data[3]{'valu'}) {    #    yy z
-        $set0 = $vprv{$data[0]{'valu'}};
-        $set1 = $vprv{$data[2]{'valu'}} - 1;
-        $xtr0 = $vprv{$data[4]{'valu'}} - 2;
+  } elsif(($data[0]{'rank'} eq $data[1]{'rank'} &&
+           $data[2]{'rank'} eq $data[3]{'rank'}) || # xx yy z
+          ($data[0]{'rank'} eq $data[1]{'rank'} &&
+           $data[3]{'rank'} eq $data[4]{'rank'}) || # xx y zz
+          ($data[1]{'rank'} eq $data[2]{'rank'} &&
+           $data[3]{'rank'} eq $data[4]{'rank'})) { # x yy zz
+    if($data[0]{'rank'} eq $data[1]{'rank'}) {      # xx
+      if($data[2]{'rank'} eq $data[3]{'rank'}) {    #    yy z
+        $set0 = $rprv{$data[0]{'rank'}};
+        $set1 = $rprv{$data[2]{'rank'}} - 1;
+        $xtr0 = $rprv{$data[4]{'rank'}} - 2;
       } else {                                      #    y zz
-        $set0 = $vprv{$data[0]{'valu'}};
-        $xtr0 = $vprv{$data[2]{'valu'}} - 1;
-        $set1 = $vprv{$data[3]{'valu'}} - 1;
+        $set0 = $rprv{$data[0]{'rank'}};
+        $xtr0 = $rprv{$data[2]{'rank'}} - 1;
+        $set1 = $rprv{$data[3]{'rank'}} - 1;
       }
     } else {                                        # x yy zz
-      $xtr0 = $vprv{$data[0]{'valu'}};
-      $set0 = $vprv{$data[1]{'valu'}};
-      $set1 = $vprv{$data[3]{'valu'}} - 1;
+      $xtr0 = $rprv{$data[0]{'rank'}};
+      $set0 = $rprv{$data[1]{'rank'}};
+      $set1 = $rprv{$data[3]{'rank'}} - 1;
     }
     $scor = (2467 +
              (((13*$set0) - summ($set0)) * 11) +
              ((    $set1  -      $set0 ) * 11) +
                    $xtr0                      );
 #  One Pair        3325..6184  2860  (13 choose 4) * 4
-  } elsif($data[0]{'valu'} eq $data[1]{'valu'} ||   # ww x y z
-          $data[1]{'valu'} eq $data[2]{'valu'} ||   # w xx y z
-          $data[2]{'valu'} eq $data[3]{'valu'} ||   # w x yy z
-          $data[3]{'valu'} eq $data[4]{'valu'}) {   # w x y zz
-    if     ($data[0]{'valu'} eq $data[1]{'valu'}) { # ww
-      $set0 = $vprv{$data[0]{'valu'}};
-      $xtr0 = $vprv{$data[2]{'valu'}} - 1;
-      $xtr1 = $vprv{$data[3]{'valu'}} - 1;
-      $xtr2 = $vprv{$data[4]{'valu'}} - 1;
-    } elsif($data[1]{'valu'} eq $data[2]{'valu'}) { #   xx
-      $xtr0 = $vprv{$data[0]{'valu'}};
-      $set0 = $vprv{$data[1]{'valu'}};
-      $xtr1 = $vprv{$data[3]{'valu'}} - 1;
-      $xtr2 = $vprv{$data[4]{'valu'}} - 1;
-    } elsif($data[2]{'valu'} eq $data[3]{'valu'}) { #     yy
-      $xtr0 = $vprv{$data[0]{'valu'}};
-      $xtr1 = $vprv{$data[1]{'valu'}};
-      $set0 = $vprv{$data[2]{'valu'}};
-      $xtr2 = $vprv{$data[4]{'valu'}} - 1;
+  } elsif($data[0]{'rank'} eq $data[1]{'rank'} ||   # ww x y z
+          $data[1]{'rank'} eq $data[2]{'rank'} ||   # w xx y z
+          $data[2]{'rank'} eq $data[3]{'rank'} ||   # w x yy z
+          $data[3]{'rank'} eq $data[4]{'rank'}) {   # w x y zz
+    if     ($data[0]{'rank'} eq $data[1]{'rank'}) { # ww
+      $set0 = $rprv{$data[0]{'rank'}};
+      $xtr0 = $rprv{$data[2]{'rank'}} - 1;
+      $xtr1 = $rprv{$data[3]{'rank'}} - 1;
+      $xtr2 = $rprv{$data[4]{'rank'}} - 1;
+    } elsif($data[1]{'rank'} eq $data[2]{'rank'}) { #   xx
+      $xtr0 = $rprv{$data[0]{'rank'}};
+      $set0 = $rprv{$data[1]{'rank'}};
+      $xtr1 = $rprv{$data[3]{'rank'}} - 1;
+      $xtr2 = $rprv{$data[4]{'rank'}} - 1;
+    } elsif($data[2]{'rank'} eq $data[3]{'rank'}) { #     yy
+      $xtr0 = $rprv{$data[0]{'rank'}};
+      $xtr1 = $rprv{$data[1]{'rank'}};
+      $set0 = $rprv{$data[2]{'rank'}};
+      $xtr2 = $rprv{$data[4]{'rank'}} - 1;
     } else {                                        #       zz
-      $xtr0 = $vprv{$data[0]{'valu'}};
-      $xtr1 = $vprv{$data[1]{'valu'}};
-      $xtr2 = $vprv{$data[2]{'valu'}};
-      $set0 = $vprv{$data[3]{'valu'}};
+      $xtr0 = $rprv{$data[0]{'rank'}};
+      $xtr1 = $rprv{$data[1]{'rank'}};
+      $xtr2 = $rprv{$data[2]{'rank'}};
+      $set0 = $rprv{$data[3]{'rank'}};
     }
     $scor  = 3325;
     $scor +=  ($set0 * choo(12, 3));
@@ -560,11 +610,11 @@ sub SlowScoreHand { # takes 1 ShortHand or 5 cards && returns Poker hand score
                          $scor +=             $xtr2          ;
 #  High Card       6185..7461  1277  (13 choose 5) - 9
   } else {
-    $xtr0 = $vprv{$data[0]{'valu'}};
-    $xtr1 = $vprv{$data[1]{'valu'}};
-    $xtr2 = $vprv{$data[2]{'valu'}};
-    $xtr3 = $vprv{$data[3]{'valu'}};
-    $xtr4 = $vprv{$data[4]{'valu'}} - $xtr3;
+    $xtr0 = $rprv{$data[0]{'rank'}};
+    $xtr1 = $rprv{$data[1]{'rank'}};
+    $xtr2 = $rprv{$data[2]{'rank'}};
+    $xtr3 = $rprv{$data[3]{'rank'}};
+    $xtr4 = $rprv{$data[4]{'rank'}} - $xtr3;
     $scor = 6185;
     $scor-- if($xtr0);
     $scor++ if($xtr1 ==  9);
@@ -1700,6 +1750,66 @@ sub UseSlow { # toggles the use of SlowScoreHand() instead of ScoreHand()
   if(@_) { $slow  = shift(); } # $slow given as param
   else   { $slow ^= 1;       } # no param so just toggle
   return(  $slow  );
+}
+
+sub CardName { # takes an abbreviated card (eg. 'As') && returns full name
+  my $card = shift() || return(0); my $name; my %data;
+  if(length($card) == 1) { # +10 b64 abbrev
+    $card = b10($card) - 10;
+    my @deck = Deck();
+    $card = $deck[$card];
+  }
+  ($data{'rank'}, $data{'suit'}) = split(//, $card);
+  $name = $rnam[$rprv{$data{'rank'}}] . ' of ';
+  foreach(@snam) { $name .= $_ if(/^$data{'suit'}/i); }
+  return($name);
+}
+
+sub NameCard { # takes a full card name (eg. 'Ace of Spades') && returns abbrev
+  my $name = shift() || return(0); my $b64f = shift() || 0; my $card;
+  $name =~ s/\s+of\s+//gi; $name =~ s/\s+//g; 
+  foreach my $indx (0..$#rnam) {
+    if($name =~ s/$rnam[$indx]//i) { $card = $rprg[$indx]; last; }
+  }
+  foreach(@snam) {
+    if($name =~ s/$_//i) { $card .= lc(substr($_, 0, 1)); last; }
+  }
+  if($b64f) { # b64 abbrev flag
+    my @deck = Deck();
+    foreach my $indx (0..$#deck) {
+      if($card eq $deck[$indx]) { $card = $indx; last; }
+    }
+    $card += 10;
+    $card = b64($card);
+  }
+  return($card);
+}
+
+sub HandName { # takes a @handref, @hand, ShortHand, or score && returns name
+  my @hand = @_; return(0) unless(@hand == 1 || @hand == 5); my $shrt; 
+  my $aflg = 0; $aflg = 1 if(ref($hand[0]) eq 'ARRAY'); my $aref = 0;
+  my %namz = (
+       '0' => 'Royal Flush',     #  Royal    Flush     0           1
+       '9' => 'Straight Flush',  #  Straight Flush     1..   9     9
+     '165' => 'Four-of-a-Kind',  #  Four-of-a-Kind    10.. 165   156
+     '321' => 'Full House',      #  Full House       166.. 321   156
+    '1598' => 'Flush',           #           Flush   322..1598  1277
+    '1608' => 'Straight',        #  Straight        1599..1608    10
+    '2466' => 'Three-of-a-Kind', #  Three-of-a-Kind 1609..2466   858
+    '3324' => 'Two Pair',        #  Two Pair        2467..3324   858
+    '6184' => 'One Pair',        #  One Pair        3325..6184  2860
+    '7461' => 'High Card',       #  High Card       6185..7461  1277
+  );
+  if($aflg) { $aref =  $hand[0]; }
+  else      { $aref = \@hand;    }
+  if(@{$aref} == 1) { $shrt = $aref->[0];       }
+  else              { $shrt = ShortHand($aref); }
+  unless(@hndz) { HandScore(); } # mk sure ShortHand array is initialized
+  unless(%scrh) { ScoreHand(); } # mk sure   scores  hash  is initialized
+  unless($shrt =~ /^\d+$/) { $shrt = $scrh{$shrt}; }
+  foreach(sort { $a <=> $b } keys(%namz)) {
+    return($namz{$_}) if($shrt <= $_);
+  }
 }
 
 127;

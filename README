@@ -3,12 +3,12 @@
 
 NAME
 
-Games::Cards::Poker - Perl Poker functions
+Games::Cards::Poker - Pure Perl Poker functions
 
 VERSION
 
-This documentation refers to version 1.0.44LCEw8 of 
-Games::Cards::Poker, which was released on Wed Apr 21 12:14:58:08 2004.
+This documentation refers to version 1.0.44P0KER of 
+Games::Cards::Poker, which was released on Sun Apr 25 00:20:14:27 2004.
 
 SYNOPSIS
 
@@ -19,12 +19,12 @@ SYNOPSIS
   my $hand_size = 5; # number of cards to deal to each player
   my @hands     = ();# player hand data
   my @deck      = Shuffle(Deck());
-  for(my $pndx = 0; $pndx < $players; $pndx++) {     # players
-    for(my $cndx = 0; $cndx < $hand_size; $cndx++) { # cards
-      push(@{$hands[$pndx]}, pop(@deck));
+  while($players--) {
+    foreach(1..$hand_size) {
+      push(@{$hands[$players]}, pop(@deck));
     }
-    printf("Player%d score:%4d hand:@{$hands[$pndx]}\n", 
-      $pndx, ScoreHand(@{$hands[$pndx]}));
+    printf("Player%d score:%4d hand:@{$hands[$players]}\n", 
+      $players, ScoreHand(@{$hands[$players]}));
   }
 
 DESCRIPTION
@@ -34,8 +34,6 @@ decks of cards && manipulating them for simple Poker games
 or simulations.
 
 2DO
-
-- mk up sim XML data file format (w/ RELAX NG?)
 
 - mk Games::Cards compatability object interface
 
@@ -48,8 +46,10 @@ USAGE
 Deck()
 
 Returns a new array of scalars with the abbreviated Poker names of
-cards (eg. 'As' eq 'Ace of Spades', 'Td' eq 'Ten of Diamonds', 
-'2c' eq 'Two of Clubs', etc.).
+cards (eg. 'As' for 'Ace of Spades', 'Td' for 'Ten of Diamonds', 
+'2c' for 'Two of Clubs', etc.).
+
+Use CardName() to expand abbreviated cards into their full names.
 
 Shuffle(@cards)
 
@@ -62,12 +62,15 @@ in place && the return value need not be reassigned.
 
 SortCards(@cards)
 
-Sorts the passed in @cards array.  SortCards() 
-returns a sorted copy of the @cards array.
+Sorts the passed in @cards array.  SortCards() returns a sorted copy
+of the @cards array.
 
 SortCards() can also take an arrayref parameter instead of an explicit
 @cards array in which case, the passed in arrayref will be sorted
 in place && the return value need not be reassigned.
+
+SortCards() works consistently on the return values of ShortHand()
+as well as abbreviated cards (eg. 'AAA', 'AAK'..'AKQs', 'AKQ'..'222').
 
 ShortHand(@hand)
 
@@ -76,6 +79,12 @@ of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
 ShortHand() calls SortCards() on it's parameter before doing the
 abbreviation to make sure that the return value is consistent.
+
+ShortHand() can be called on fewer cards than a full @hand of 5 to
+obtain other useful abbreviations (eg. ShortHand(@hole) will return
+the abbreviated form of a player's two hole [pocket] cards or
+ShortHand(@flop) will abbreviate the three community cards which
+flop onto the board in Texas Hold'Em).
 
 SlowScoreHand(@hand)
 
@@ -91,10 +100,10 @@ It should be easy to use ScoreHand() as a first pass where ties can
 be resolved by another suit-comparison function if you want such 
 behavior.
 
-HandScore($scor)
+HandScore($score)
 
 This function is the opposite of ScoreHand().  It takes an integer
-score parameter && returns the corresponding ShortHand string.
+$score parameter && returns the corresponding ShortHand string.
 
 HandScore() uses a fully enumerated table to just index the
 associated ShortHand so it should be quite fast.  The table was 
@@ -124,7 +133,7 @@ SlowScoreHand() is being used whenever ScoreHand() is called.
 BestIndices(@cards)
 
 BestIndices() takes 5 or more cards (normally 7) which can be
-split among separate arrays (like BestIndices(@hole, @bord) for
+split among separate arrays (like BestIndices(@hole, @board) for
 Hold'Em) && returns an array of the indices of the 5 cards (hand)
 which yield the best score.
 
@@ -132,7 +141,7 @@ BestHand(@best, @cards)
 
 BestHand() takes the return value of BestIndices() as the
 first parameter (which is an array of the best indices) && then the
-same other parameters (@cards) or (@hole, @bord) to give you a copy
+same other parameters (@cards) or (@hole, @board) to give you a copy
 of just the best cards.  The return value of this function can be
 passed to ScoreHand() to get the score of the best hand.
 
@@ -140,6 +149,28 @@ BestHand() can optionally take just the @cards like
 BestIndices() && it will automagically call BestIndices()
 first to obtain @best.  It will then return copies of those indexed
 cards from the @cards.
+
+CardName($card)
+
+CardName() takes an abbreviated card (eg. 'As', 'Kh', '2c') && 
+returns the expanded full name of the card ('Ace of Spades', 
+'King of Hearts', 'Two of Clubs').
+
+NameCard($name)
+
+NameCard() does the opposite of CardName() by taking an expanded 
+full name (eg. 'Queen of Diamonds', 'Jack of Hearts', 'Ten of Clubs')
+&& returns the abbreviated card (eg. 'Qd', 'Jh', 'Tc').
+
+HandName($score)
+
+HandName() takes a HandScore() parameter && returns the name of
+the corresponding scoring category it falls under (eg. 'Royal Flush',
+'Three-of-a-Kind', 'High Card').
+
+HandName() can optionally accept an arrayref to a hand, the @hand
+itself, or a ShortHand instead of the $score parameter to find out
+the HandName of any of those.
 
 WHY?
 
@@ -160,8 +191,8 @@ B64 notes: Cards map perfectly into A..Z,a..z so += 10 for only letter rep
             1.Ah 5.Kh 9.Qh D.Jh H.Th L.9h P.8h T.7h X.6h b.5h f.4h j.3h n.2h
             2.Ad 6.Kd A.Qd E.Jd I.Td M.9d Q.8d U.7d Y.6d c.5d g.4d k.3d o.2d
             3.Ac 7.Kc B.Qc F.Jc J.Tc N.9c R.8c V.7c Z.6c d.5c h.4c l.3c p.2c
-    Values:   0    1    2    3    4    5    6    7    8    9    A    B    C 
- B64 Cards: 0.As   1.Ah   2.Ad   3.Ac       Values: 0
+     Ranks:   0    1    2    3    4    5    6    7    8    9    A    B    C 
+ B64 Cards: 0.As   1.Ah   2.Ad   3.Ac        Ranks: 0
             4.Ks   5.Kh   6.Kd   7.Kc               1
             8.Qs   9.Qh   A.Qd   B.Qc               2
             C.Js   D.Jh   E.Jd   F.Jc               3
@@ -185,6 +216,18 @@ me any suggestions or coding tips or notes of appreciation
 CHANGES
 
 Revision history for Perl extension Games::Cards::Poker:
+
+- 1.0.44P0KER  Sun Apr 25 00:20:14:27 2004
+
+* made CardName() to return 'Ace of Spades' or 'Two of Clubs' for
+          'As'or'A' or '2c'or'z' && NameCard() to do inverse
+
+* made HandName() to return 'Royal Flush' or 'High Card' for
+          ScoreHand() or ShortHand() or @hand or \@hand && NameHand()
+
+* rewrote SortCards() to accept any length ShortHand() params
+
+* s/valu/rank/g s/scor/score/g s/bord/board/g
 
 - 1.0.44LCEw8  Wed Apr 21 12:14:58:08 2004
 

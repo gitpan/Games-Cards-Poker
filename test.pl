@@ -160,3 +160,74 @@ $result = ScoreHand(BestHand(@hol2, @bord));
 #    last;
 #  }
 #}
+#
+#print "pre43\n";
+## what needs to sort:
+##  'A'..'2'
+##  'As'..'Ac'
+##  'AA','AKs','AK'..'A2'
+##  'AAA','AAK'..'AKQs','AKQ'..'222'
+##  'AAAAK','AAAAQ'..'AKQJTs','AKQJT'..'32222' # based on rank values not scores
+#@hand = qw( A K J 9 Q T 7 );
+#$result = ShortHand(SortCards(\@hand));
+#&report($result eq 'AKQJT97', "$result\n");
+#@hand = Deck();
+#$result = ShortHand(SortCards(\@hand));
+#&report($result eq 'AAAAKKKKQQQQJJJJTTTT99998888777766665555444433332222', "$result\n");
+#@hand = Shuffle(Deck());
+#$result = ShortHand(SortCards(\@hand));
+#&report($result eq 'AAAAKKKKQQQQJJJJTTTT99998888777766665555444433332222', "$result\n");
+#@hand = qw( AA AQ AQs AKs A2 A2s K2 22 AK );
+#SortCards(\@hand);
+#$result = "@hand"; 
+#&report($result eq 'AA AKs AK AQs AQ A2s A2 K2 22', "$result\n");
+#print "pre47\n";
+#@hand = qw( A32 AKQ 222 AAQ A32s AAK AAA AKQs );
+#SortCards(\@hand);
+#$result = "@hand"; 
+#&report($result eq 'AAA AAK AAQ AKQs AKQ A32s A32 222', "$result\n");
+#@hand = qw( A5432 AKQJT 32222 AAAAQ AKQJTs A5432s AAAAK );
+#SortCards(\@hand);
+#$result = "@hand"; 
+#&report($result eq 'AAAAK AAAAQ AKQJTs AKQJT A5432s A5432 32222', "$result\n");
+#
+#$result = CardName('As');
+#&report($result eq 'Ace of Spades', "$result\n");
+#$result = NameCard($result);
+#&report($result eq 'As', "$result\n");
+#
+#print "pre51\n";
+#$result = CardName('2c');
+#&report($result eq 'Two of Clubs', "$result\n");
+#$result = NameCard($result);
+#&report($result eq '2c', "$result\n");
+#
+#$result = HandName(0);
+#&report($result eq 'Royal Flush', "$result\n");
+#$result = HandName('AKQJTs');
+#&report($result eq 'Royal Flush', "$result\n");
+#print "pre55\n";
+#$result = HandName(qw( Jh Kh Th Ah Qh ));
+#&report($result eq 'Royal Flush', "$result\n");
+#@hand = qw( Jh Kh Th Ah Qh );
+#$result = HandName(\@hand);
+#&report($result eq 'Royal Flush', "$result\n");
+#
+#$result = HandName(1);
+#&report($result eq 'Straight Flush', "$result\n");
+#$result = HandName('KQJT9s');
+#&report($result eq 'Straight Flush', "$result\n");
+#print "pre59\n";
+#$result = HandName(qw( Jh Kh Th 9h Qh ));
+#&report($result eq 'Straight Flush', "$result\n");
+#@hand = qw( Jh Kh Th 9h Qh );
+#$result = HandName(\@hand);
+#&report($result eq 'Straight Flush', "$result\n");
+#
+#$result = HandName(2000);
+#&report($result eq 'Three-of-a-Kind', "$result\n");
+#$result = HandName(7000);
+#&report($result eq 'High Card', "$result\n");
+#print "pre63\n";
+#$result = HandName(HandScore(7000));
+#&report($result eq 'High Card', "$result\n");
