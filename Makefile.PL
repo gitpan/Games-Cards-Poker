@@ -3,13 +3,14 @@ use ExtUtils::MakeMaker;
 # # the contents of the Makefile that is written.
 WriteMakefile(
   'NAME'         => 'Games::Cards::Poker',
-  'VERSION'      => '1.0.44H2DUS',
+  'VERSION'      => '1.0.44ILBKV',
   'ABSTRACT'     => 'Perl Poker functions',
   'AUTHOR'       => 'Pip Stuart <Pip@CPAN.Org>',
   'EXE_FILES'    => [ 
                     ],
   'PREREQ_PM'    => {
     'Math::BaseCnv'                  => 0,
+    'Algorithm::ChooseSubsets'       => 0,
   }, # Module::Name => 1.1,
   'dist'         => { 'COMPRESS' => 'gzip', 'SUFFIX' => 'tgz' },
 );

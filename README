@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 VERSION
 
-This documentation refers to version 1.0.44H2DUS of 
-Games::Cards::Poker, which was released on Sat Apr 17 02:13:30:28 2004.
+This documentation refers to version 1.0.44ILBKV of 
+Games::Cards::Poker, which was released on Sun Apr 18 21:11:20:31 2004.
 
 SYNOPSIS
 
@@ -18,11 +18,10 @@ SYNOPSIS
   my $players   = 4; # number of players to get hands dealt
   my $hand_size = 5; # number of cards to deal to each player
   my @hands     = ();# player hand data
-  my @deck      = Shuffle(Deck()); # Deck returns array of ('As'..'2c')
-  #print "Deck:@deck\n";       # print out shuffled deck
-  for(my $pndx = 0; $pndx < $players; $pndx++) {
-    for(my $hndx = 0; $hndx < $hand_size; $hndx++) {
-      push(@{$hands[$pndx]}, pop(@deck)); # $hands[$pndx][$hndx] = pop
+  my @deck      = Shuffle(Deck());
+  for(my $pndx = 0; $pndx < $players; $pndx++) {     # players
+    for(my $cndx = 0; $cndx < $hand_size; $cndx++) { # cards
+      push(@{$hands[$pndx]}, pop(@deck));
     }
     printf("Player%d score:%4d hand:@{$hands[$pndx]}\n", 
       $pndx, ScoreHand(@{$hands[$pndx]}));
@@ -36,11 +35,14 @@ or simulations.
 
 2DO
 
-- mk HandScore to take score && return proper hand
+- benchmark BestHoldEmIndices() + ScoreHand() against
+                  Best()              + Scor()
 
-- mk ScoreHand take optional arrayref param like others
+- rewrite SortCards to be faster (cleaner?) && rerun benchmarks
 
-- mk up data file format
+- mk up sim XML data file format (w/ RELAX NG?)
+
+- mk Games::Cards compatability object interface
 
 - better error checking
 
@@ -81,15 +83,24 @@ ScoreHand(@hand)
 
 Returns an integer score (where lower is better) for the passed in 
 Poker @hand.  This means 0 (zero) is returned for a Royal Flush && 
-the worst possible score is 7460 awarded to 7, 5, 4, 3, 2 unsuited.
+the worst possible score is 7461 awarded to 7, 5, 4, 3, 2 unsuited.
 
 If you want higher scores to mean higher hands, just subtract the 
-return value from 7460.
+return value from 7461.
 
 All suits are considered to have equal value in this scoring function.
 It should be easy to use ScoreHand() as a first pass where ties can
 be resolved by another suit-comparison function if you want such 
 behavior.
+
+HandScore($scor)
+
+This function is the opposite of ScoreHand().  It takes an integer
+score paramter && returns the corresponding ShortHand string.
+
+HandScore() uses a fully enumerated table to just index the
+ssociated ShortHand so it should be quite fast.  The table was 
+generated using ScoreHand().
 
 BestHoldEmIndices(@hole, @board)
 
@@ -98,14 +109,27 @@ indices of the 5 cards (hand) which yield the best score.
 
 BestHoldEmHand(@best, @hole, @board)
 
-BestHoldEmHand() takes the return value of BestHoldEmIndices() as 
-the first parameter (which is an array of the best indices) && then
-the same other parameters to give you a copy of just the best cards.
-The return value of this function can be passed to ScoreHand() to get
-the score of the best hand in HoldEm.
+BestHoldEmHand() takes the return value of BestHoldEmIndices() 
+(or Best()) as the first parameter (which is an array of the best
+indices) && then the same other parameters to give you a copy of
+just the best cards.  The return value of this function can be
+passed to ScoreHand() to get the score of the best hand in HoldEm.
 
 BestHoldEmHand() can optionally take just the @hole && @board like
 BestHoldEmIndices() && it will automagically call both properly.
+
+Best(@hole, @board)
+
+This is an older (less flexible but likely faster) version of
+BestHoldEmIndices().  I've kept it in until I can benchmark them
+versus each other to know whether the performance differential is
+negligible.
+
+Scor($short_hand)
+
+This is a new (probably much faster) version of ScoreHand() which 
+does the opposite of HandScore() by indexing a  ShortHand() key 
+string into a hash of corresponding score values.
 
 WHY?
 
@@ -116,8 +140,8 @@ Games::Poker::* wouldn't compile correctly for me so I thought it
 
 NOTES
 
-Suits are: s,h,d,c (Spade,Heart,Diamond,Club) like bridge (alphabetical)
-  although they are sorted && appear in this order, suits are ignored for
+Suits are: s,h,d,c (Spade,Heart,Diamond,Club) like bridge (alphabetical).
+  Although they are sorted && appear in this order, suits are ignored for
   scoring by default (but can be optionally reordered && scored later)
 
 B64 notes: Cards map perfectly into A..Z,a..z so += 10 for only letter rep
@@ -152,6 +176,25 @@ CHANGES
 
 Revision history for Perl extension Games::Cards::Poker:
 
+- 1.0.44ILBKV  Sun Apr 18 21:11:20:31 2004
+
+* wrote Scor() with gen'd enumerated hash of ShortHand => Score
+
+* wrote HandScore() to just lookup index of a ShortHand from a score
+
+* squashed 4 scoring bugs in one pair section
+
+* used Algorithm::ChooseSubsets for new BestHoldEmIndices
+    (on Jan's recommendation)
+
+* renamed enumerated BestHoldEmIndices() as Best()
+
+* gave ScoreHand() optional arrayref param like others
+
+* gave ScoreHand() optional ShortHand() string param
+
+* updated 2do && tidied up documentation a bit
+
 - 1.0.44H2DUS  Sat Apr 17 02:13:30:28 2004
 
 * added BestHoldEmIndices() && BestHoldEmHand() for Tim && Jan
@@ -177,7 +220,7 @@ LICENSE
 
 Most source code should be Free!
   Code I have lawful authority over is and shall be!
-Copyright: (c) 2003, Pip Stuart.  All rights reserved.
+Copyright: (c) 2004, Pip Stuart.  All rights reserved.
 Copyleft :  I license this software under the GNU General Public 
   License (version 2).  Please consult the Free Software Foundation 
   (http://www.fsf.org) for important information about your freedom.
