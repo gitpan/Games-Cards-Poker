@@ -1,0 +1,161 @@
+ 43KNlxM - Games::Cards::Poker.pm created by Pip Stuart <Pip@CPAN.Org> to provide
+   Poker functions (&& maybe later objects) using only Perl.
+
+NAME
+
+Games::Cards::Poker - Perl Poker functions
+
+VERSION
+
+This documentation refers to version 1.0.44F2Q8F of 
+Games::Cards::Poker, which was released on Thu Apr 15 02:26:08:15 2004.
+
+SYNOPSIS
+
+  use Games::Cards::Poker;
+
+  # Deal 4 players hands && score them...
+  my $players   = 4; # number of players to get hands dealt
+  my $hand_size = 5; # number of cards to deal to each player
+  my @hands     = ();# player hand data
+  my @deck      = Shuffle(Deck()); # Deck returns array of ('As'..'2c')
+  #print "Deck:@deck\n";       # print out shuffled deck
+  for(my $pndx = 0; $pndx < $players; $pndx++) {
+    for(my $hndx = 0; $hndx < $hand_size; $hndx++) {
+      push(@{$hands[$pndx]}, pop(@deck)); # $hands[$pndx][$hndx] = pop
+    }
+    printf("Player%d score:%4d hand:@{$hands[$pndx]}\n", 
+      $pndx, ScoreHand(@{$hands[$pndx]}));
+  }
+
+DESCRIPTION
+
+Poker provides a few simple functions for creating 
+decks of cards && manipulating them for simple Poker games 
+or simulations.
+
+2DO
+
+- mk HandScore to take score && return proper hand
+
+- mk ScoreHand take optional arrayref param like others
+
+- mk up data file format
+
+- better error checking
+
+-    What else does Poker need?
+
+USAGE
+
+Deck()
+
+Returns a new array of scalars with the abbreviated Poker names of
+cards (eg. As == Ace of Spades, Td == Ten of Diamonds, 2c == Two of 
+Clubs, etc.).
+
+Shuffle(@cards)
+
+Shuffles the passed in @cards array in one quick pass.  Shuffle() 
+returns a shuffled copy of the @cards array.
+
+Shuffle() can also take an arrayref parameter instead of an explicit
+@cards array in which case, the passed in arrayref will be shuffled
+in place && the return value need not be reassigned.
+
+SortCards(@cards)
+
+Sorts the passed in @cards array.  SortCards() 
+returns a sorted copy of the @cards array.
+
+SortCards() can also take an arrayref parameter instead of an explicit
+@cards array in which case, the passed in arrayref will be sorted
+in place && the return value need not be reassigned.
+
+ShortHand(@hand)
+
+Returns a scalar string containing the abbreviated Poker description
+of @hand (eg. AKQJTs == Royal Flush, QQ993 == Two Pair, etc.).
+
+ScoreHand(@hand)
+
+Returns an integer score (where lower is better) for the passed in 
+Poker @hand.  This means 0 (zero) is returned for a Royal Flush && 
+the worst possible score is 7460 awarded to 7, 5, 4, 3, 2 unsuited.
+
+If you want higher scores to mean higher hands, just subtract the 
+return value from 7460.
+
+All suits are considered to have equal value in this scoring function.
+It should be easy to use ScoreHand() as a first pass where ties can
+be resolved by another suit-comparison function if you want such 
+behavior.
+
+NOTES
+
+Games::Poker::* wouldn't compile correctly for me so I thought it 
+  shouldn't take too long to write my own. =)
+
+Suits are: s,h,d,c (Spade,Heart,Diamond,Club) like bridge (alphabetical)
+  although they are sorted && appear in this order, suits are ignored for
+  scoring by default (but can be optionally reordered && scored later)
+
+B64 notes: Cards map perfectly into A..Z,a..z so += 10 for only letter rep
+
+ B64 Cards: 0.As 4.Ks 8.Qs C.Js G.Ts K.9s O.8s S.7s W.6s a.5s e.4s i.3s m.2s
+            1.Ah 5.Kh 9.Qh D.Jh H.Th L.9h P.8h T.7h X.6h b.5h f.4h j.3h n.2h
+            2.Ad 6.Kd A.Qd E.Jd I.Td M.9d Q.8d U.7d Y.6d c.5d g.4d k.3d o.2d
+            3.Ac 7.Kc B.Qc F.Jc J.Tc N.9c R.8c V.7c Z.6c d.5c h.4c l.3c p.2c
+    Values:   0    1    2    3    4    5    6    7    8    9    A    B    C 
+ B64 Cards: 0.As   1.Ah   2.Ad   3.Ac       Values: 0
+            4.Ks   5.Kh   6.Kd   7.Kc               1
+            8.Qs   9.Qh   A.Qd   B.Qc               2
+            C.Js   D.Jh   E.Jd   F.Jc               3
+            G.Ts   H.Th   I.Td   J.Tc               4
+            K.9s   L.9h   M.9d   N.9c               5
+            O.8s   P.8h   Q.8d   R.8c               6
+            S.7s   T.7h   U.7d   V.7c               7
+            W.6s   X.6h   Y.6d   Z.6c               8
+            a.5s   b.5h   c.5d   d.5c               9
+            e.4s   f.4h   g.4d   h.4c               A
+            i.3s   j.3h   k.3d   l.3c               B
+            m.2s   n.2h   o.2d   p.2c               C
+            q.Jok0 r.Jok1                          -1
+
+Error checking is minimal.
+
+I hope you find Games::Cards::Poker useful.  Please feel free to e-mail 
+me any suggestions or coding tips or notes of appreciation 
+("app-ree-see-ay-shun").  Thank you.  TTFN.
+
+CHANGES
+
+Revision history for Perl extension Games::Cards::Poker:
+
+- 1.0.44F2Q8F  Thu Apr 15 02:26:08:15 2004
+
+* original version
+
+INSTALL
+
+Please run:
+
+    `perl -MCPAN -e "install Games::Cards::Poker"`
+
+or uncompress the package and run the standard:
+
+    `perl Makefile.PL; make; make test; make install`
+
+LICENSE
+
+Most source code should be Free!
+  Code I have lawful authority over is and shall be!
+Copyright: (c) 2003, Pip Stuart.  All rights reserved.
+Copyleft :  I license this software under the GNU General Public 
+  License (version 2).  Please consult the Free Software Foundation 
+  (http://www.fsf.org) for important information about your freedom.
+
+AUTHOR
+
+Pip Stuart <Pip@CPAN.Org>
+
