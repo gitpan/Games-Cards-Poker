@@ -1,7 +1,6 @@
 #!/usr/bin/perl -w
 # 44KDCFi - benchmrk.pl created by Pip Stuart <Pip@CPAN.Org> to compare
-#     Games::Cards::Poker BestIndices() + ScoreHand() speed versus
-#     Best() + Scor().
+#     Games::Cards::Poker ScoreHand() speed versus SlowScoreHand().
 # Notz:
 #   On my P3-800MHz 768MB:
 #     took 82seconds to just loop through all 2,598,560 possible hands
@@ -33,7 +32,7 @@
 
 use strict;
 use Algorithm::ChooseSubsets;
-use Games::Cards::Poker;
+use Games::Cards::Poker qw(:all);
 use Time::PT;
 
 my $limt = 4096; # limit of how many total hole+boards to test for each

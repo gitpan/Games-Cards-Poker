@@ -1,7 +1,15 @@
 Poker.pm
 MANIFEST
-test.pl
+t/00basic.t
+t/01best.t
+t/02scoreck.t
+t/03allscores.t
+t/04sort.t
+t/05name.t
+t/06b64.t
+t/07misc.t
 benchmrk.pl
+bin/pokr
 MANIFEST.SKIP
 README
 Makefile.PL
