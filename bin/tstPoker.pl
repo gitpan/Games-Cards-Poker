@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
-# 43KNlxM - pokr created by Pip Stuart <Pip@CPAN.Org> to generate poker
-#   hands && print out results.
-# USAGE: `pokr <NumberOfRounds> <NumberOfPlayersDealt>`
+# 43KNlxM - tstPoker.pl created by Pip Stuart <Pip@CPAN.Org> to generate
+#   test runs of Texas Hold'Em poker hands && print out the results.
+# USAGE: `perl tstPoker.pl <NumberOfRounds> <NumberOfPlayersDealt>`
+# This code is distributed under the GNU General Public License (version 2).
 use strict;
 use Math::BaseCnv       qw(:all);
 use Games::Cards::Poker qw(:all);

@@ -1,3 +1,4 @@
+#!/usr/bin/perl -w
 # 43KNlxM - Games::Cards::Poker.pm created by Pip Stuart <Pip@CPAN.Org> to provide
 #   Poker functions using only Perl.
 
@@ -7,8 +8,8 @@ Games::Cards::Poker - Pure Perl Poker functions
 
 =head1 VERSION
 
-This documentation refers to version 1.2.46QD4ax of 
-Games::Cards::Poker, which was released on Sat Jun 26 13:04:36:59 2004.
+This documentation refers to version 1.2.4CCJ12M of 
+Games::Cards::Poker, which was released on Sun Dec 12 19:01:02:22 2004.
 
 =head1 SYNOPSIS
 
@@ -220,8 +221,7 @@ card (eg. 'As', 'Ac', '2c').
 =head2 CardDec($card)
 
 CardDec() takes an abbreviated $card (eg. 'As', 'Kh', '2c') && 
-returns the single character (only letters) base-64 representation
-of the card ('0', '15', '51');
+returns the corresponding decimal card representation ('0', '15', '51').
 
 =head2 DecHand($dech)
 
@@ -292,7 +292,7 @@ SPrg() - Simple accessor to my Suit Progression array: 's'..'c'
 
 RNam() - Simple accessor to my Rank Name array: 'Ace'..'Two'
 
-SPrg() - Simple accessor to my Suit Name array: 'Spades'..'Clubs'
+SNam() - Simple accessor to my Suit Name array: 'Spades'..'Clubs'
 
 Namz() - Simple accessor to my Hand Name hash where keys are score
 thresholds && values are full names of hand categories.
@@ -438,6 +438,12 @@ Revision history for Perl extension Games::Cards::Poker:
 
 =over 4
 
+=item - 1.2.4CCJ12M  Sun Dec 12 19:01:02:22 2004
+
+* added MySQL && XML && .c && Tk scripts to bin/
+
+* fixed pod typo && updated License
+
 =item - 1.2.46QD4ax  Sat Jun 26 13:04:36:59 2004
 
 * added Dec functions
@@ -554,11 +560,12 @@ or uncompress the package and run the standard:
 =head1 LICENSE
 
 Most source code should be Free!
-  Code I have lawful authority over is and shall be!
-Copyright: (c) 2004, Pip Stuart.  All rights reserved.
-Copyleft :  I license this software under the GNU General Public 
-  License (version 2).  Please consult the Free Software Foundation 
-  (http://www.fsf.org) for important information about your freedom.
+  Code I have lawful authority over is && shall be!
+Copyright: (c) 2004, Pip Stuart.
+Copyleft : This software is licensed under the GNU General Public
+  License (version 2), && as such comes with NO WARRANTY.  Please
+  consult the Free Software Foundation (http://FSF.Org) for
+  important information about your freedom.
 
 =head1 AUTHOR
 
@@ -567,10 +574,10 @@ Pip Stuart <Pip@CPAN.Org>
 =cut
 
 package Games::Cards::Poker;
-require     Exporter;
+require              Exporter;
 use strict;
-use base qw(Exporter);
-use Math::BaseCnv  qw(:all);
+use base          qw(Exporter);
+use Math::BaseCnv qw(:all    );
 use Algorithm::ChooseSubsets;
 
 our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand HandScore);
@@ -597,9 +604,9 @@ our %EXPORT_TAGS = ( 'all' => [ qw(Shuffle Deck SortCards ShortHand HandName
                      'odds' => [ qw(WorstHand RemoveCard CountWays CalcOdds) ],
                      'data' => [ qw(RPrg RNam Namz Hndz Holz Flpz RPrV
                                     SPrg SNam Zman Zdnh Zloh Zplf PDat) ] );
-our $VERSION     = '1.2.46QD4ax'; # major . minor . PipTimeStamp
+our $VERSION     = '1.2.4CCJ12M'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major and minor
-# See http://Ax9.Org/pt?$PTVR and `perldoc Time::PT`
+# Please see `perldoc Time::PT` for an explanation of $PTVR.
 
 my %pdat; # global Poker Data hash which all lower data is built from
 my @rprg; my @sprg; my @rnam; my @snam; my %rprv; my $indx;
