@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 VERSION
 
-This documentation refers to version 1.0.44F2Q8F of 
-Games::Cards::Poker, which was released on Thu Apr 15 02:26:08:15 2004.
+This documentation refers to version 1.0.44H2DUS of 
+Games::Cards::Poker, which was released on Sat Apr 17 02:13:30:28 2004.
 
 SYNOPSIS
 
@@ -51,8 +51,8 @@ USAGE
 Deck()
 
 Returns a new array of scalars with the abbreviated Poker names of
-cards (eg. As == Ace of Spades, Td == Ten of Diamonds, 2c == Two of 
-Clubs, etc.).
+cards (eg. 'As' eq 'Ace of Spades', 'Td' eq 'Ten of Diamonds', 
+'2c' eq 'Two of Clubs', etc.).
 
 Shuffle(@cards)
 
@@ -75,7 +75,7 @@ in place && the return value need not be reassigned.
 ShortHand(@hand)
 
 Returns a scalar string containing the abbreviated Poker description
-of @hand (eg. AKQJTs == Royal Flush, QQ993 == Two Pair, etc.).
+of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
 ScoreHand(@hand)
 
@@ -91,10 +91,30 @@ It should be easy to use ScoreHand() as a first pass where ties can
 be resolved by another suit-comparison function if you want such 
 behavior.
 
-NOTES
+BestHoldEmIndices(@hole, @board)
+
+BestHoldEmIndices() takes 5, 6, or 7 cards && returns an array of the
+indices of the 5 cards (hand) which yield the best score.
+
+BestHoldEmHand(@best, @hole, @board)
+
+BestHoldEmHand() takes the return value of BestHoldEmIndices() as 
+the first parameter (which is an array of the best indices) && then
+the same other parameters to give you a copy of just the best cards.
+The return value of this function can be passed to ScoreHand() to get
+the score of the best hand in HoldEm.
+
+BestHoldEmHand() can optionally take just the @hole && @board like
+BestHoldEmIndices() && it will automagically call both properly.
+
+WHY?
 
 Games::Poker::* wouldn't compile correctly for me so I thought it 
-  shouldn't take too long to write my own. =)
+  shouldn't take too long to write my own. =)  It was a fun problem...
+  much trickier than I first imagined but I think I have solved the
+  problem elegantly once && for all.
+
+NOTES
 
 Suits are: s,h,d,c (Spade,Heart,Diamond,Club) like bridge (alphabetical)
   although they are sorted && appear in this order, suits are ignored for
@@ -131,6 +151,13 @@ me any suggestions or coding tips or notes of appreciation
 CHANGES
 
 Revision history for Perl extension Games::Cards::Poker:
+
+- 1.0.44H2DUS  Sat Apr 17 02:13:30:28 2004
+
+* added BestHoldEmIndices() && BestHoldEmHand() for Tim && Jan
+
+* commented unnecessary Games::Cards inheritance since I haven't written
+any compatability / object interface yet
 
 - 1.0.44F2Q8F  Thu Apr 15 02:26:08:15 2004
 

@@ -4,7 +4,7 @@
 #   Before `make install' is performed this script should be run with
 #     `make test'.  After `make install' it should work as `perl test.pl'.
 
-BEGIN { $| = 1; print "0..7\n"; }
+BEGIN { $| = 1; print "0..15\n"; }
 END   { print "not ok 1\n" unless($loaded); }
 use Games::Cards::Poker;
 
@@ -42,3 +42,48 @@ $result = $hand[1];
 
 $result = ShortHand(@hand);
 &report($result eq 'AT944' , "$result\n");
+
+$result = ScoreHand(@hand);
+&report($result == 5552 , "$result\n");
+
+my @hol0 = qw( As Ac );
+my @hol1 = qw( Ad Kh );
+my @hol2 = qw( Ah Kd );
+my @bord = qw( 9s 3d Ks );
+my @best = BestHoldEmIndices(@hol0, @bord);
+my @crdz = @hol0; push(@crdz, @bord);
+   @hand = (); foreach(@best) { push(@hand, $crdz[$_]); }
+$result = ScoreHand(@hand);
+&report($result == 3357 , "$result\n");
+
+#$result = ScoreHand(BestHoldEmHand(BestHoldEmIndices(@hol0, @bord), @hol0, @bord));
+#&report($result == 3357 , "$result\n");
+
+$result = ScoreHand(BestHoldEmHand(@hol0, @bord));
+&report($result == 3357 , "$result\n");
+
+$result = ScoreHand(BestHoldEmHand(@hol1, @bord));
+&report($result == 3577 , "$result\n");
+
+$result = ScoreHand(BestHoldEmHand(@hol2, @bord));
+&report($result == 3577 , "$result\n");
+
+   @bord = qw( 9s 3d Ks 3c );
+$result = ScoreHand(BestHoldEmHand(@hol0, @bord));
+&report($result == 2577 , "$result\n");
+
+$result = ScoreHand(BestHoldEmHand(@hol1, @bord));
+&report($result == 2698 , "$result\n");
+
+$result = ScoreHand(BestHoldEmHand(@hol2, @bord));
+&report($result == 2698 , "$result\n");
+
+#   @bord = qw( 9s 3d Ks 3c Kc );
+#$result = ScoreHand(BestHoldEmHand(@hol0, @bord));
+#&report($result == 2470 , "$result\n");
+#
+#$result = ScoreHand(BestHoldEmHand(@hol1, @bord));
+#&report($result ==  188 , "$result\n");
+#
+#$result = ScoreHand(BestHoldEmHand(@hol2, @bord));
+#&report($result ==  188 , "$result\n");

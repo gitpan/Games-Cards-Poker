@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 =head1 VERSION
 
-This documentation refers to version 1.0.44F2Q8F of 
-Games::Cards::Poker, which was released on Thu Apr 15 02:26:08:15 2004.
+This documentation refers to version 1.0.44H2DUS of 
+Games::Cards::Poker, which was released on Sat Apr 17 02:13:30:28 2004.
 
 =head1 SYNOPSIS
 
@@ -55,8 +55,8 @@ or simulations.
 =head2 Deck()
 
 Returns a new array of scalars with the abbreviated Poker names of
-cards (eg. As == Ace of Spades, Td == Ten of Diamonds, 2c == Two of 
-Clubs, etc.).
+cards (eg. 'As' eq 'Ace of Spades', 'Td' eq 'Ten of Diamonds', 
+'2c' eq 'Two of Clubs', etc.).
 
 =head2 Shuffle(@cards)
 
@@ -79,7 +79,7 @@ in place && the return value need not be reassigned.
 =head2 ShortHand(@hand)
 
 Returns a scalar string containing the abbreviated Poker description
-of @hand (eg. AKQJTs == Royal Flush, QQ993 == Two Pair, etc.).
+of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
 =head2 ScoreHand(@hand)
 
@@ -95,10 +95,30 @@ It should be easy to use ScoreHand() as a first pass where ties can
 be resolved by another suit-comparison function if you want such 
 behavior.
 
-=head1 NOTES
+=head2 BestHoldEmIndices(@hole, @board)
+
+BestHoldEmIndices() takes 5, 6, or 7 cards && returns an array of the
+indices of the 5 cards (hand) which yield the best score.
+
+=head2 BestHoldEmHand(@best, @hole, @board)
+
+BestHoldEmHand() takes the return value of BestHoldEmIndices() as 
+the first parameter (which is an array of the best indices) && then
+the same other parameters to give you a copy of just the best cards.
+The return value of this function can be passed to ScoreHand() to get
+the score of the best hand in HoldEm.
+
+BestHoldEmHand() can optionally take just the @hole && @board like
+BestHoldEmIndices() && it will automagically call both properly.
+
+=head1 WHY?
 
 Games::Poker::* wouldn't compile correctly for me so I thought it 
-  shouldn't take too long to write my own. =)
+  shouldn't take too long to write my own. =)  It was a fun problem...
+  much trickier than I first imagined but I think I have solved the
+  problem elegantly once && for all.
+
+=head1 NOTES
 
 Suits are: s,h,d,c (Spade,Heart,Diamond,Club) like bridge (alphabetical)
   although they are sorted && appear in this order, suits are ignored for
@@ -138,6 +158,13 @@ Revision history for Perl extension Games::Cards::Poker:
 
 =over 4
 
+=item - 1.0.44H2DUS  Sat Apr 17 02:13:30:28 2004
+
+* added BestHoldEmIndices() && BestHoldEmHand() for Tim && Jan
+
+* commented unnecessary Games::Cards inheritance since I haven't written
+any compatability / object interface yet
+
 =item - 1.0.44F2Q8F  Thu Apr 15 02:26:08:15 2004
 
 * original version
@@ -171,13 +198,14 @@ Pip Stuart <Pip@CPAN.Org>
 
 package Games::Cards::Poker;
 require    Exporter;
-require              Games::Cards;
+#require              Games::Cards;
 use strict;
-use base qw(Exporter Games::Cards);
+use base qw(Exporter);# Games::Cards);
 use Math::BaseCnv  qw(:all);
 
-our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand);
-our $VERSION     = '1.0.44F2Q8F'; # major . minor . PipTimeStamp
+our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand 
+                      BestHoldEmIndices BestHoldEmHand);
+our $VERSION     = '1.0.44H2DUS'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major and minor
 # See http://Ax9.Org/pt?$PTVR and `perldoc Time::PT`
 
@@ -264,9 +292,9 @@ sub ShortHand { # takes an arrayref or list of cards to abbreviate
   return($shrt);
 }
 
-sub ScoreHand { # takes a list of 5 cards && return the poker hand score
+sub ScoreHand { # takes a list of 5 cards && returns the Poker hand score
   my @hand = @_; return(0) unless(@hand == 5);
-  my $scor = 7463; my @data = (); my $flsh = 0; my $strt = 0;
+  my $scor = 7461; my @data = (); my $flsh = 0; my $strt = 0;
   my ($set0, $set1);                      # temp values for matched sets
   my ($xtr0, $xtr1, $xtr2, $xtr3, $xtr4); # temp values for extra cards
   SortCards(\@hand);
@@ -457,6 +485,76 @@ sub ScoreHand { # takes a list of 5 cards && return the poker hand score
                          $scor += (           $xtr4      - 2);
   }
   return($scor);
+}
+
+sub BestHoldEmIndices { # takes 5,6,or 7 cards && returns indices of the best 5
+  my @crdz = @_; return(0) unless(@crdz >= 5);
+  my @best = (); my @bhnd = (); my $cndx;
+  # 7 choose 5 hands with pocket + board = 7!/(5!*(7-5)!) = 5040/(120*2) = 21
+  my @choi = ( [ 0, 1, 2, 3, 4 ], #  0.  abcdexx   abcde xx
+               [ 0, 1, 2, 3, 5 ], #  1.  abcdxex   abcd x e x
+               [ 0, 1, 2, 3, 6 ], #  2.  abcdxxe   abcd xx e
+               [ 0, 1, 2, 4, 5 ], #  3.  abcxdex   abc x de x
+               [ 0, 1, 2, 4, 6 ], #  4.  abcxdxe   abc x d x e
+               [ 0, 1, 2, 5, 6 ], #  5.  abcxxde   abc xx de
+               [ 0, 1, 3, 4, 5 ], #  6.  abxcdex   ab x cde x
+               [ 0, 1, 3, 4, 6 ], #  7.  abxcdxe   ab x cd x e
+               [ 0, 1, 3, 5, 6 ], #  8.  abxcxde   ab x c x de
+               [ 0, 1, 4, 5, 6 ], #  9.  abxxcde   ab xx cde
+               [ 0, 2, 3, 4, 5 ], # 10.  axbcdex   a x bcde x
+               [ 0, 2, 3, 4, 6 ], # 11.  axbcdxe   a x bcd x e
+               [ 0, 2, 3, 5, 6 ], # 12.  axbcxde   a x bc x de
+               [ 0, 2, 4, 5, 6 ], # 13.  axbxcde   a x b x cde
+               [ 0, 3, 4, 5, 6 ], # 14.  axxbcde   a xx bcde
+               [ 1, 2, 3, 4, 5 ], # 15.  xabcdex   x abcde x
+               [ 1, 2, 3, 4, 6 ], # 16.  xabcdxe   x abcd x e
+               [ 1, 2, 3, 5, 6 ], # 17.  xabcxde   x abc x de
+               [ 1, 2, 4, 5, 6 ], # 18.  xabxcde   x ab x cde
+               [ 1, 3, 4, 5, 6 ], # 19.  xaxbcde   x a x bcde
+               [ 2, 3, 4, 5, 6 ]);# 20.  xxabcde   xx abcde
+  foreach(@choi) {
+    my @hand = ();
+    for($cndx = 0; $cndx < 5; $cndx++) {
+      my $shft = 0;
+      if((@crdz >= 5 && $_->[0] == 2) ||
+         (@crdz >= 6 && $_->[0] == 1) ||
+         (@crdz >= 7                )) {
+        $shft-- if(@crdz <= 6);
+        $shft-- if(@crdz == 5);
+        push(@hand, $crdz[ ($_->[ $cndx ] + $shft) ]);
+        if(@hand == 5) {
+          if(!@best || !@bhnd || (ScoreHand(@bhnd) > ScoreHand(@hand))) {
+            @best = @{$_}; @bhnd = ();
+            my $indx;
+            for($indx = 0; $indx < @best; $indx++) {
+              if     (@crdz == 5) {
+                push(@bhnd, $crdz[ ($best[$indx] -  2) ]);
+                $best[$indx]                     -= 2;
+              } elsif(@crdz == 6) {
+                push(@bhnd, $crdz[ ($best[$indx] -  1) ]);
+                $best[$indx]                     -= 1;
+              } else              {
+                push(@bhnd, $crdz[  $best[$indx]       ]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return(@best);
+}
+
+sub BestHoldEmHand { # takes return value of BestHoldEmIndices() && all cards
+  my @best = (shift, shift, shift, shift, shift); # get best indices
+  my @crdz = @_;
+  if(@crdz <= 2) { # iff only 7 params given, pass onto Indices first
+    unshift(@crdz, @best);
+    @best = BestHoldEmIndices(@crdz);
+  }
+  return(0) unless(@best == 5 && @crdz >= 5); # ck for valid sizes
+  my @hand = (); foreach(@best) { push(@hand, $crdz[$_]); } # copy best cards
+  return(@hand);
 }
 
 127;
