@@ -7,8 +7,8 @@ Games::Cards::Poker - Pure Perl Poker functions
 
 =head1 VERSION
 
-This documentation refers to version 1.2.4610lBw of 
-Games::Cards::Poker, which was released on Tue Jun  1 00:47:11:58 2004.
+This documentation refers to version 1.2.46QD4ax of 
+Games::Cards::Poker, which was released on Sat Jun 26 13:04:36:59 2004.
 
 =head1 SYNOPSIS
 
@@ -28,9 +28,8 @@ Games::Cards::Poker, which was released on Tue Jun  1 00:47:11:58 2004.
 
 =head1 DESCRIPTION
 
-Poker provides a few simple functions for creating 
-decks of cards && manipulating them for simple Poker games 
-or simulations.
+Poker provides a few functions for creating decks of
+cards && manipulating them for simple Poker games or simulations.
 
 =head1 2DO
 
@@ -38,6 +37,8 @@ or simulations.
 
 =item - mk CalcOdds() work more accurately && for more opponents
           && factor in stages beyond hole
+
+=item - maybe remove all %pdat ways data (since all can be determined easily)
 
 =item - better error checking
 
@@ -210,9 +211,32 @@ a list of the cards.
 HandB64() takes a list of cards which make up a @hand (or a reference to 
 such an array) && returns a base-64 abbreviation string.
 
+=head2 DecCard($decc)
+
+DecCard() does the opposite of CardDec() by taking a decimal card
+($decc) representation (eg. '0', '3', '51') && returning the abbreviated
+card (eg. 'As', 'Ac', '2c').
+
+=head2 CardDec($card)
+
+CardDec() takes an abbreviated $card (eg. 'As', 'Kh', '2c') && 
+returns the single character (only letters) base-64 representation
+of the card ('0', '15', '51');
+
+=head2 DecHand($dech)
+
+DecHand() does the opposite of HandDec() by taking a string containing
+several concatenated decimal card abbreviations && converting it into
+a list of the cards.
+
+=head2 HandDec(@hand)
+
+HandDec() takes a list of cards which make up a @hand (or a reference to 
+such an array) && returns an array of decimal abbreviations.
+
 =head2 RemoveCard($card, @cards)
 
-Returns a copy of @cards with $card removed.
+Returns a copy of @cards with abbreviated $card (eg. 'Td') removed.
 
 RemoveCard() can also take an arrayref parameter instead of an explicit
 @cards array in which case, the passed in arrayref will be updated
@@ -308,13 +332,11 @@ for when you want to utilize more than just the above default functions.
 
 Exports everything!
 
-  Shuffle Deck SortCards      ShortHand HandName
-                          SlowScoreHand UseSlow
-  BestIndices CardB64 B64Hand ScoreHand CardName
-  BestHand    B64Card HandB64 HandScore NameCard
+  Shuffle Deck SortCards ShortHand HandName SlowScoreHand UseSlow
+  BestIndices CardB64 B64Hand CardDec DecHand ScoreHand CardName
+  BestHand    B64Card HandB64 DecCard HandDec HandScore NameCard
   WorstHand RemoveCard CountWays CalcOdds
-  RPrg RNam Namz Hndz Holz Flpz RPrV
-  SPrg SNam Zman Zdnh Zloh Zplf PDat
+  RPrg RNam Namz Hndz Holz Flpz RPrV SPrg SNam Zman Zdnh Zloh Zplf PDat
 
 =head2 :best
 
@@ -345,6 +367,13 @@ of cards && hands.
 
   CardB64 B64Card HandB64 B64Hand
 
+=head2 :dec
+
+This tag exports functions which convert between decimal representations
+of cards && hands.
+
+  CardDec DecCard HandDec DecHand
+
 =head2 :odds
 
 This tag exports functions which should be useful in calculating odds.
@@ -356,8 +385,7 @@ This tag exports functions which should be useful in calculating odds.
 This tag exports all internal data sets in case direct access to them
 is beneficial.
 
-  RPrg RNam Namz Hndz Holz Flpz RPrV
-  SPrg SNam Zman Zdnh Zloh Zplf PDat
+  RPrg RNam Namz Hndz Holz Flpz RPrV SPrg SNam Zman Zdnh Zloh Zplf PDat
 
 =head1 WHY?
 
@@ -409,6 +437,10 @@ me any suggestions or coding tips or notes of appreciation
 Revision history for Perl extension Games::Cards::Poker:
 
 =over 4
+
+=item - 1.2.46QD4ax  Sat Jun 26 13:04:36:59 2004
+
+* added Dec functions
 
 =item - 1.2.4610lBw  Tue Jun  1 00:47:11:58 2004
 
@@ -543,8 +575,8 @@ use Algorithm::ChooseSubsets;
 
 our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand HandScore);
 our @EXPORT_OK   = qw(HandName SlowScoreHand UseSlow
-                      BestIndices  CardB64 B64Hand  CardName
-                      BestHand     B64Card HandB64  NameCard
+                      BestIndices  CardB64 B64Hand CardDec DecHand  CardName
+                      BestHand     B64Card HandB64 DecCard HandDec  NameCard
                       WorstHand RemoveCard CountWays CalcOdds
                        RPrg  RNam  Namz  Hndz  Holz  Flpz  RPrV
                        SPrg  SNam  Zman  Zdnh  Zloh  Zplf  PDat
@@ -552,19 +584,20 @@ our @EXPORT_OK   = qw(HandName SlowScoreHand UseSlow
                       @sprg @snam %zman %zdnh %zloh %zplf %pdat);
 our %EXPORT_TAGS = ( 'all' => [ qw(Shuffle Deck SortCards ShortHand HandName
                                                       SlowScoreHand UseSlow
-                            BestIndices  CardB64 B64Hand  ScoreHand CardName
-                            BestHand     B64Card HandB64  HandScore NameCard
-                            WorstHand RemoveCard CountWays CalcOdds
-                            RPrg RNam Namz Hndz Holz Flpz RPrV
-                            SPrg SNam Zman Zdnh Zloh Zplf PDat) ],
+             BestIndices  CardB64 B64Hand CardDec DecHand ScoreHand CardName
+             BestHand     B64Card HandB64 DecCard HandDec HandScore NameCard
+             WorstHand RemoveCard CountWays CalcOdds
+             RPrg RNam Namz Hndz Holz Flpz RPrV
+             SPrg SNam Zman Zdnh Zloh Zplf PDat) ],
                      'best' => [ qw(BestIndices  BestHand) ],
                      'slow' => [ qw(SlowScoreHand UseSlow) ],
                      'name' => [ qw(CardName NameCard HandName) ],
                      'b64'  => [ qw(CardB64   B64Card HandB64  B64Hand) ],
+                     'dec'  => [ qw(CardDec   DecCard HandDec  DecHand) ],
                      'odds' => [ qw(WorstHand RemoveCard CountWays CalcOdds) ],
                      'data' => [ qw(RPrg RNam Namz Hndz Holz Flpz RPrV
                                     SPrg SNam Zman Zdnh Zloh Zplf PDat) ] );
-our $VERSION     = '1.2.4610lBw'; # major . minor . PipTimeStamp
+our $VERSION     = '1.2.46QD4ax'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major and minor
 # See http://Ax9.Org/pt?$PTVR and `perldoc Time::PT`
 
@@ -576,20 +609,14 @@ my @holz; my %zloh; # array && hash of possible holes
 my @flpz; my %zplf; # array && hash of possible flops
 my $slow = 0; # UseSlow() flag to use SlowScoreHand() instead of ScoreHand()
 
-sub RPrV { return(%rprv); } # simple accessors to my internal data sets
-sub RPrg { return(@rprg); }
-sub SPrg { return(@sprg); }
-sub RNam { return(@rnam); }
-sub SNam { return(@snam); }
-sub Namz { return(%namz); } # these ones are defined at the bottom
-sub Zman { return(%zman); }
-sub Hndz { return(@hndz); }
-sub Zdnh { return(%zdnh); }
-sub Holz { return(@holz); }
-sub Zloh { return(%zloh); }
-sub Flpz { return(@flpz); }
-sub Zplf { return(%zplf); }
-sub PDat { return(%pdat); }
+# simple accessors to internal data sets (all are defined at bottom of code)
+sub PDat { return(%pdat); } sub RPrV { return(%rprv); }
+sub RPrg { return(@rprg); } sub RNam { return(@rnam); }
+sub SPrg { return(@sprg); } sub SNam { return(@snam); }
+sub Namz { return(%namz); } sub Hndz { return(@hndz); }
+sub Zman { return(%zman); } sub Zdnh { return(%zdnh); }
+sub Holz { return(@holz); } sub Flpz { return(@flpz); }
+sub Zloh { return(%zloh); } sub Zplf { return(%zplf); }
 
 sub Deck { # return an array of cards as a whole new deck in clean new order
   my @deck = ();
@@ -955,20 +982,28 @@ sub NameCard { # takes a full card name (eg. 'Ace of Spades') && returns abbrev
 }
 
 sub CardB64 { # takes an abbreviated card (eg. 'As') && returns b64 rep
+  return(b64(CardDec(@_) + 10));
+}
+
+sub B64Card { # takes a b64 card && returns abbrev
+  my $card = shift() || return(0); my @deck = Deck();
+  return($deck[ b10($card) - 10 ]);
+}
+
+sub CardDec { # takes an abbreviated card (eg. 'As') && returns decimal rep
   my $card = shift() || return(0); my @deck = Deck();
   if(length($card) == 1) { # only rank or suit was provided
     if($card =~ /^[shdc]$/i) { $card  = "A$card"; } # just suit so add Ace
     else                     { $card .= 's';      } # just rank so add Spade
   }
   foreach my $indx (0..$#deck) {
-    if($card eq $deck[$indx]) { $card = $indx; last; }
+    return($indx) if($card eq $deck[$indx]);
   }
-  return(b64($card + 10));
+  return(52);
 }
 
-sub B64Card { # takes a b64 card && returns abbrev
-  my $card = shift() || return(0); my @deck = Deck();
-  return($deck[ b10($card) - 10 ]);
+sub DecCard { # takes a decimal card && returns abbrev
+  my $card = shift() || return(0); my @deck = Deck(); return($deck[$card]);
 }
 
 sub HandName { # takes a \@handref, @hand, ShortHand, or score && returns name
@@ -997,6 +1032,24 @@ sub HandB64 { # takes a \@handref or @hand && returns b64 $hand
 sub B64Hand { # takes a b64 $hand && returns a @hand of abbrev. cards eg. 'As'
   my $b64h = shift() || return(0); my @hand;
   foreach(split(//, $b64h)) { push(@hand, B64Card($_)); }
+  return(@hand);
+}
+
+sub HandDec { # takes a \@handref or @hand && returns dec $hand
+  my @hand = @_; return(0) unless(@hand >= 1); my @dech = ();
+  my $aflg = 0; $aflg = 1 if(ref($hand[0]) eq 'ARRAY'); my $aref;
+  if($aflg) { $aref =  $hand[0]; }
+  else      { $aref = \@hand;    }
+  foreach(@{$aref}) { push(@dech, CardDec($_)); }
+  return(@dech);
+}
+
+sub DecHand { # takes a decimal @dech && returns a @hand of abbrev. cards
+  my @dech = @_; return(0) unless(@dech >= 1); my @hand = ();
+  my $aflg = 0; $aflg = 1 if(ref($dech[0]) eq 'ARRAY'); my $aref;
+  if($aflg) { $aref =  $dech[0]; }
+  else      { $aref = \@dech;    }
+  foreach(@{$aref}) { push(@hand, DecCard($_)); }
   return(@hand);
 }
 
@@ -1073,7 +1126,7 @@ sub CalcOdds { # calculate the odds of winning with certain cards
 }
 
 %pdat = ( # Global Poker Data
-  'holz' => [ # possible ShortHand holes
+  'holz' => [ # possible ShortHand holes                  ['abbrev', ways]
     ['AA'    ,    6], ['AKs'   ,    4], ['AK'    ,   12], ['AQs'   ,    4], 
     ['AQ'    ,   12], ['AJs'   ,    4], ['AJ'    ,   12], ['ATs'   ,    4], 
     ['AT'    ,   12], ['A9s'   ,    4], ['A9'    ,   12], ['A8s'   ,    4], 
@@ -3208,12 +3261,9 @@ sub CalcOdds { # calculate the odds of winning with certain cards
              'Seven', 'Six',  'Five',  'Four', 'Three', 'Two'], # Rank Names
   'snam' => ['Spades', 'Hearts', 'Diamonds', 'Clubs'],          # Suit Names
 );
-@rprg = @{$pdat{'rprg'}};
-@sprg = @{$pdat{'sprg'}};
-@rnam = @{$pdat{'rnam'}};
-@snam = @{$pdat{'snam'}};
-%namz = %{$pdat{'namz'}};
-%zman = reverse(%namz);
+@rprg = @{$pdat{'rprg'}}; @rnam = @{$pdat{'rnam'}};
+@sprg = @{$pdat{'sprg'}}; @snam = @{$pdat{'snam'}};
+%namz = %{$pdat{'namz'}}; %zman = reverse(%namz);
 for($indx = 0; $indx < @rprg; $indx++) { $rprv{$rprg[$indx]} = $indx; }
 for(@{$pdat{'holz'}})                  { push(@holz, $_->[0]);        }
 for($indx = 0; $indx < @holz; $indx++) { $zloh{$holz[$indx]} = $indx; }

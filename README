@@ -7,8 +7,8 @@ Games::Cards::Poker - Pure Perl Poker functions
 
 VERSION
 
-This documentation refers to version 1.2.4610lBw of 
-Games::Cards::Poker, which was released on Tue Jun  1 00:47:11:58 2004.
+This documentation refers to version 1.2.46QD4ax of 
+Games::Cards::Poker, which was released on Sat Jun 26 13:04:36:59 2004.
 
 SYNOPSIS
 
@@ -28,14 +28,15 @@ SYNOPSIS
 
 DESCRIPTION
 
-Poker provides a few simple functions for creating 
-decks of cards && manipulating them for simple Poker games 
-or simulations.
+Poker provides a few functions for creating decks of
+cards && manipulating them for simple Poker games or simulations.
 
 2DO
 
 - mk CalcOdds() work more accurately && for more opponents
           && factor in stages beyond hole
+
+- maybe remove all %pdat ways data (since all can be determined easily)
 
 - better error checking
 
@@ -206,9 +207,32 @@ HandB64(@hand)
 HandB64() takes a list of cards which make up a @hand (or a reference to 
 such an array) && returns a base-64 abbreviation string.
 
+DecCard($decc)
+
+DecCard() does the opposite of CardDec() by taking a decimal card
+($decc) representation (eg. '0', '3', '51') && returning the abbreviated
+card (eg. 'As', 'Ac', '2c').
+
+CardDec($card)
+
+CardDec() takes an abbreviated $card (eg. 'As', 'Kh', '2c') && 
+returns the single character (only letters) base-64 representation
+of the card ('0', '15', '51');
+
+DecHand($dech)
+
+DecHand() does the opposite of HandDec() by taking a string containing
+several concatenated decimal card abbreviations && converting it into
+a list of the cards.
+
+HandDec(@hand)
+
+HandDec() takes a list of cards which make up a @hand (or a reference to 
+such an array) && returns an array of decimal abbreviations.
+
 RemoveCard($card, @cards)
 
-Returns a copy of @cards with $card removed.
+Returns a copy of @cards with abbreviated $card (eg. 'Td') removed.
 
 RemoveCard() can also take an arrayref parameter instead of an explicit
 @cards array in which case, the passed in arrayref will be updated
@@ -304,13 +328,11 @@ for when you want to utilize more than just the above default functions.
 
 Exports everything!
 
-  Shuffle Deck SortCards      ShortHand HandName
-                          SlowScoreHand UseSlow
-  BestIndices CardB64 B64Hand ScoreHand CardName
-  BestHand    B64Card HandB64 HandScore NameCard
+  Shuffle Deck SortCards ShortHand HandName SlowScoreHand UseSlow
+  BestIndices CardB64 B64Hand CardDec DecHand ScoreHand CardName
+  BestHand    B64Card HandB64 DecCard HandDec HandScore NameCard
   WorstHand RemoveCard CountWays CalcOdds
-  RPrg RNam Namz Hndz Holz Flpz RPrV
-  SPrg SNam Zman Zdnh Zloh Zplf PDat
+  RPrg RNam Namz Hndz Holz Flpz RPrV SPrg SNam Zman Zdnh Zloh Zplf PDat
 
 :best
 
@@ -341,6 +363,13 @@ of cards && hands.
 
   CardB64 B64Card HandB64 B64Hand
 
+:dec
+
+This tag exports functions which convert between decimal representations
+of cards && hands.
+
+  CardDec DecCard HandDec DecHand
+
 :odds
 
 This tag exports functions which should be useful in calculating odds.
@@ -352,8 +381,7 @@ This tag exports functions which should be useful in calculating odds.
 This tag exports all internal data sets in case direct access to them
 is beneficial.
 
-  RPrg RNam Namz Hndz Holz Flpz RPrV
-  SPrg SNam Zman Zdnh Zloh Zplf PDat
+  RPrg RNam Namz Hndz Holz Flpz RPrV SPrg SNam Zman Zdnh Zloh Zplf PDat
 
 WHY?
 
@@ -403,6 +431,10 @@ me any suggestions or coding tips or notes of appreciation
 CHANGES
 
 Revision history for Perl extension Games::Cards::Poker:
+
+- 1.2.46QD4ax  Sat Jun 26 13:04:36:59 2004
+
+* added Dec functions
 
 - 1.2.4610lBw  Tue Jun  1 00:47:11:58 2004
 

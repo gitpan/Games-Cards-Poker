@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 # # the contents of the Makefile that is written.
 WriteMakefile(
   'NAME'         => 'Games::Cards::Poker',
-  'VERSION'      => '1.2.4610lBw',
+  'VERSION'      => '1.2.46QD4ax',
   'ABSTRACT'     => 'Pure Perl Poker functions',
   'AUTHOR'       => 'Pip Stuart <Pip@CPAN.Org>',
   'EXE_FILES'    => [ 
