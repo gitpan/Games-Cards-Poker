@@ -1,6 +1,7 @@
 Poker.pm
 MANIFEST
 test.pl
+benchmrk.pl
 MANIFEST.SKIP
 README
 Makefile.PL

@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 =head1 VERSION
 
-This documentation refers to version 1.0.44ILBKV of 
-Games::Cards::Poker, which was released on Sun Apr 18 21:11:20:31 2004.
+This documentation refers to version 1.0.44KFNKP of 
+Games::Cards::Poker, which was released on Tue Apr 20 15:23:20:25 2004.
 
 =head1 SYNOPSIS
 
@@ -36,11 +36,6 @@ or simulations.
 =head1 2DO
 
 =over 2
-
-=item - benchmark BestHoldEmIndices() + ScoreHand() against
-                  Best()              + Scor()
-
-=item - rewrite SortCards to be faster (cleaner?) && rerun benchmarks
 
 =item - mk up sim XML data file format (w/ RELAX NG?)
 
@@ -83,7 +78,10 @@ in place && the return value need not be reassigned.
 Returns a scalar string containing the abbreviated Poker description
 of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
-=head2 ScoreHand(@hand)
+ShortHand() calls SortCards() on it's parameter before doing to 
+abbreviation to make sure that the return value is consistent.
+
+=head2 SlowScoreHand(@hand)
 
 Returns an integer score (where lower is better) for the passed in 
 Poker @hand.  This means 0 (zero) is returned for a Royal Flush && 
@@ -103,8 +101,29 @@ This function is the opposite of ScoreHand().  It takes an integer
 score paramter && returns the corresponding ShortHand string.
 
 HandScore() uses a fully enumerated table to just index the
-ssociated ShortHand so it should be quite fast.  The table was 
-generated using ScoreHand().
+associated ShortHand so it should be quite fast.  The table was 
+generated using SlowScoreHand().
+
+=head2 ScoreHand(@hand)
+
+This is a new version of SlowScoreHand() which does the opposite of
+HandScore() by indexing a ShortHand() key string into a hash of
+corresponding score values.  This faster version should be used for
+any normal hand scoring needs.  If you still want to use the slower
+version, you can call the UseSlow() function to make ScoreHand()
+actually call SlowScoreHand() instead of just indexing the answer
+score in a hash.
+
+=head2 UseSlow([$new_slow_flag])
+
+UseSlow() is a function provided in case you'd prefer to actually 
+employ the SlowScoreHand() function whenever you call ScoreHand().
+
+UseSlow() takes an optional $new_slow_flag value.  If you don't 
+provide $new_slow_flag, UseSlow() will toggle the slow state.
+
+UseSlow() always returns the current state of whether 
+SlowScoreHand() is being used whenever ScoreHand() is called.
 
 =head2 BestHoldEmIndices(@hole, @board)
 
@@ -113,27 +132,16 @@ indices of the 5 cards (hand) which yield the best score.
 
 =head2 BestHoldEmHand(@best, @hole, @board)
 
-BestHoldEmHand() takes the return value of BestHoldEmIndices() 
-(or Best()) as the first parameter (which is an array of the best
-indices) && then the same other parameters to give you a copy of
-just the best cards.  The return value of this function can be
-passed to ScoreHand() to get the score of the best hand in HoldEm.
+BestHoldEmHand() takes the return value of BestHoldEmIndices() as the
+first parameter (which is an array of the best indices) && then the
+same other parameters (@hole && @board) to give you a copy of just
+the best cards.  The return value of this function can be passed to
+ScoreHand() to get the score of the best hand in HoldEm.
 
 BestHoldEmHand() can optionally take just the @hole && @board like
-BestHoldEmIndices() && it will automagically call both properly.
-
-=head2 Best(@hole, @board)
-
-This is an older (less flexible but likely faster) version of
-BestHoldEmIndices().  I've kept it in until I can benchmark them
-versus each other to know whether the performance differential is
-negligible.
-
-=head2 Scor($short_hand)
-
-This is a new (probably much faster) version of ScoreHand() which 
-does the opposite of HandScore() by indexing a  ShortHand() key 
-string into a hash of corresponding score values.
+BestHoldEmIndices() && it will automagically call BestHoldEmIndices()
+first to obtain @best.  It will then return copies of those indexed
+cards from the @hole && @board.
 
 =head1 WHY?
 
@@ -181,6 +189,24 @@ me any suggestions or coding tips or notes of appreciation
 Revision history for Perl extension Games::Cards::Poker:
 
 =over 4
+
+=item - 1.0.44KFNKP  Tue Apr 20 15:23:20:25 2004
+
+* wrote UseSlow() so that benchmrk.pl would still work without Best()
+    && in case anyone would rather have ScoreHand() call 
+    SlowScoreHand() every time instead.
+
+* since my old Best() was actually slower than BestHoldEmIndices() =O
+    I removed Best().
+
+* since old Scor() was so much faster than old ScoreHand(), I renamed
+    them to ScoreHand() && SlowScoreHand() respectively since 
+    computational version is unnecessary now.
+
+* wrote benchmrk.pl to test BestHoldEmIndices() + ScoreHand() against
+    Best() + Scor().  Best()+Scor() only took 60% as long to run.
+
+* added SortCards() call on ShortHand() param just in case
 
 =item - 1.0.44ILBKV  Sun Apr 18 21:11:20:31 2004
 
@@ -247,9 +273,9 @@ use base qw(Exporter);# Games::Cards);
 use Math::BaseCnv  qw(:all);
 use Algorithm::ChooseSubsets;
 
-our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand Best
-                      BestHoldEmIndices BestHoldEmHand HandScore Scor);
-our $VERSION     = '1.0.44ILBKV'; # major . minor . PipTimeStamp
+our @EXPORT      = qw(Shuffle Deck SortCards ShortHand ScoreHand SlowScoreHand
+                      BestHoldEmIndices BestHoldEmHand HandScore UseSlow);
+our $VERSION     = '1.0.44KFNKP'; # major . minor . PipTimeStamp
 our $PTVR        = $VERSION; $PTVR =~ s/^\d+\.\d+\.//; # strip major and minor
 # See http://Ax9.Org/pt?$PTVR and `perldoc Time::PT`
 
@@ -258,6 +284,7 @@ my @vprg = ('A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2');
 my @sprg = ('s', 'h', 'd', 'c'); # Spade, Heart, Diamond, Club  (Club, Diam)?
 my %vprv; for(my $indx=0; $indx<@vprg; $indx++) { $vprv{$vprg[$indx]} = $indx;}
 my @hndz = (); my %scrh = (); # array && hash for faster ShortHand => scor
+my $slow = 0; # UseSlow() flag to use SlowScoreHand() instead of ScoreHand()
 
 sub Deck { # return an array of cards as a whole new deck in clean new order
   my @deck = ();
@@ -323,12 +350,13 @@ sub SortCards { # takes an arrayref or list of cards to sort
   else      { return(@data); }
 }
 
-sub ShortHand { # takes an arrayref or list of cards to abbreviate
+sub ShortHand { # takes an arrayref or list of cards to abbrev.
   return(0) unless(@_); # must have at least one parameter
   my $aflg = 0; $aflg = 1 if(ref($_[0]) eq 'ARRAY');
   my $aref = 0; my @data = @_; my $shrt = ''; my $suit = 1;
   if($aflg) { $aref = $_[0];  }
   else      { $aref = \@data; }
+  SortCards($aref) unless(@{$aref} == 1); # make sure cards are sorted first
   foreach(@{$aref}) { 
     $shrt .=      substr($_, 0, 1); 
     $suit  = 0 if(substr($_, 1, 1) ne substr($aref->[0], 1, 1));
@@ -337,7 +365,7 @@ sub ShortHand { # takes an arrayref or list of cards to abbreviate
   return($shrt);
 }
 
-sub ScoreHand { # takes 1 ShortHand or 5 cards && returns the Poker hand score
+sub SlowScoreHand { # takes 1 ShortHand or 5 cards && returns Poker hand score
   my @hand = @_; return(0) unless(@hand == 1 || @hand == 5);
   my $aflg = 0; $aflg = 1 if(ref( $hand[0]) eq 'ARRAY'); my $aref = 0;
   if($aflg) { $aref =  $hand[0]; }
@@ -352,7 +380,8 @@ sub ScoreHand { # takes 1 ShortHand or 5 cards && returns the Poker hand score
     } else {
       ($data[$indx]{'valu'}, $data[$indx]{'suit'}) = split(//, $aref->[$indx]);
     }
-  } # next line makes data unsuited ShortHand param only had 5 values
+  } 
+  # make data unsuited if ShortHand param only had 5 values (no 's' on the end)
   $data[0]{'suit'} = 'h' if(@{$aref} == 1 && length($aref->[0]) == 5);
 #  Hand            ScoreRange  Size  Description
 #--------------------------------------------------------
@@ -513,12 +542,10 @@ sub ScoreHand { # takes 1 ShortHand or 5 cards && returns the Poker hand score
       $xtr2 = $vprv{$data[2]{'valu'}};
       $set0 = $vprv{$data[3]{'valu'}};
     }
-    # probs: 55432, 54432, 54332, 54322
-    $xtr2++ if($data[0]{'valu'} eq '5');
     $scor  = 3325;
-    $scor += ($set0 * choo(12, 3));
-    $xtr2 -= ($xtr1 + 1);
-    $scor++ if($set0 < $xtr0 && $xtr0 == 9);
+    $scor +=  ($set0 * choo(12, 3));
+    $scor++ if($xtr0 == 9);
+    $xtr2 -=  ($xtr1 +  1);
     while($xtr0-- > 0) { $scor +=  choo((10 - $xtr0), 2)     ; }
     while($xtr1-- > 1) { $scor += (     (12 - $xtr1)     - 1); }
                          $scor +=             $xtr2          ;
@@ -542,63 +569,16 @@ sub ScoreHand { # takes 1 ShortHand or 5 cards && returns the Poker hand score
   return($scor);
 }
 
-sub Best { # old enumerated (less flexible) version of BestHoldEmIndices()
-  my @crdz = @_; return(0) unless(@crdz >= 5); my @best = (); my @bhnd = ();
-  # 7 choose 5 hands with pocket + board = 7!/(5!*(7-5)!) = 5040/(120*2) = 21
-  my @choi = ( [ 0, 1, 2, 3, 4 ], #  0.  abcdexx   abcde xx
-               [ 0, 1, 2, 3, 5 ], #  1.  abcdxex   abcd x e x
-               [ 0, 1, 2, 3, 6 ], #  2.  abcdxxe   abcd xx e
-               [ 0, 1, 2, 4, 5 ], #  3.  abcxdex   abc x de x
-               [ 0, 1, 2, 4, 6 ], #  4.  abcxdxe   abc x d x e
-               [ 0, 1, 2, 5, 6 ], #  5.  abcxxde   abc xx de
-               [ 0, 1, 3, 4, 5 ], #  6.  abxcdex   ab x cde x
-               [ 0, 1, 3, 4, 6 ], #  7.  abxcdxe   ab x cd x e
-               [ 0, 1, 3, 5, 6 ], #  8.  abxcxde   ab x c x de
-               [ 0, 1, 4, 5, 6 ], #  9.  abxxcde   ab xx cde
-               [ 0, 2, 3, 4, 5 ], # 10.  axbcdex   a x bcde x
-               [ 0, 2, 3, 4, 6 ], # 11.  axbcdxe   a x bcd x e
-               [ 0, 2, 3, 5, 6 ], # 12.  axbcxde   a x bc x de
-               [ 0, 2, 4, 5, 6 ], # 13.  axbxcde   a x b x cde
-               [ 0, 3, 4, 5, 6 ], # 14.  axxbcde   a xx bcde
-               [ 1, 2, 3, 4, 5 ], # 15.  xabcdex   x abcde x
-               [ 1, 2, 3, 4, 6 ], # 16.  xabcdxe   x abcd x e
-               [ 1, 2, 3, 5, 6 ], # 17.  xabcxde   x abc x de
-               [ 1, 2, 4, 5, 6 ], # 18.  xabxcde   x ab x cde
-               [ 1, 3, 4, 5, 6 ], # 19.  xaxbcde   x a x bcde
-               [ 2, 3, 4, 5, 6 ]);# 20.  xxabcde   xx abcde
-  foreach(@choi) {
-    my @hand = ();
-    for(my $cndx = 0; $cndx < 5; $cndx++) {
-      my $shft = 0;
-      if((@crdz >= 5 && $_->[0] == 2) ||
-         (@crdz >= 6 && $_->[0] == 1) ||
-         (@crdz >= 7                )) {
-        $shft++ if(@crdz <= 6);
-        $shft++ if(@crdz == 5);
-        push(@hand, $crdz[ ($_->[ $cndx ] - $shft) ]);
-        if(@hand == 5 && (!@best || (ScoreHand(@bhnd) > ScoreHand(@hand)))) {
-          @best = @{$_}; @bhnd = ();
-          for(my $indx = 0; $indx < @best; $indx++) {
-            push(@bhnd, $crdz[ ($best[$indx] -  $shft) ]);
-            $best[$indx]                     -= $shft;
-          }
-        }
-      }
-    }
-  }
-  return(@best);
-}
-
-sub BestHoldEmIndices { # takes 5,6,or 7 cards && returns indices of the best 5
+sub BestHoldEmIndices { # takes 5+ cards (7) && returns indices of the best 5
   my @crdz = @_; return(0) unless(@crdz >= 5); my @best = (); my @bhnd = ();
   my $choo = Algorithm::ChooseSubsets->new(scalar(@crdz), 5);
   while(my $choi = $choo->next()) {
     my @hand = ();
     for(my $cndx = 0; $cndx < 5; $cndx++) {
       push(@hand, $crdz[ $choi->[ $cndx ] ]);
-      if(@hand == 5 && (!@best || (ScoreHand(@bhnd) > ScoreHand(@hand)))) {
+      if(@hand == 5 && (!@best || ScoreHand(@bhnd) > ScoreHand(@hand))) {
         @best = @{$choi}; @bhnd = ();
-        push(@bhnd, $crdz[ $_ ]) foreach(@best);
+        push(@bhnd, $crdz[$_]) foreach(@best);
       }
     }
   }
@@ -613,14 +593,14 @@ sub BestHoldEmHand { # takes return value of BestHoldEmIndices() && all cards
     @best = BestHoldEmIndices(@crdz);
   }
   return(0) unless(@best == 5 && @crdz >= 5); # ck for valid sizes
-  my @hand = (); foreach(@best) { push(@hand, $crdz[$_]); } # copy best cards
+  my @hand = (); push(@hand, $crdz[$_]) foreach(@best); # copy best cards
   return(@hand);
 }
 
 sub HandScore { # returns the ShortHand representation of passed in score param
   my $scor = shift || 0;
   unless(@hndz) { # define Look-Up Table (LUT) only the first time it's called
-    @hndz = ( # this table was generated from the ScoreHand function
+    @hndz = ( # this table was generated from the SlowScoreHand() function
       'AKQJTs', 'KQJT9s', 'QJT98s', 'JT987s', 'T9876s', '98765s', '87654s',
       '76543s', '65432s', 'A5432s', 'AAAAK' , 'AAAAQ' , 'AAAAJ' , 'AAAAT' ,
       'AAAA9' , 'AAAA8' , 'AAAA7' , 'AAAA6' , 'AAAA5' , 'AAAA4' , 'AAAA3' ,
@@ -1692,18 +1672,25 @@ sub HandScore { # returns the ShortHand representation of passed in score param
   return($hndz[$scor]);
 }
 
-sub Scor { # returns the score of the passed in @hand or ShortHand
+sub ScoreHand { # returns the score of the passed in @hand or ShortHand
   my @hand = @_; return(7462) unless(@hand == 1 || @hand == 5); my $shrt;
   my $aflg = 0; $aflg = 1 if(ref($hand[0]) eq 'ARRAY'); my $aref = 0;
   if($aflg) { $aref =  $hand[0]; }
   else      { $aref = \@hand;    }
-  if(@{$aref} == 1) { $shrt = $aref->[0];                  }
-  else              { $shrt = ShortHand(SortCards($aref)); }
+  if(@{$aref} == 1) { $shrt = $aref->[0];       }
+  else              { $shrt = ShortHand($aref); }
   unless(@hndz) { HandScore(); } # mk sure ShortHand array is initialized
-  unless(%scrh) { # define Look-Up Table (LUT) only the first time it's called
+  unless(%scrh) { # define hash only the first time ScoreHand() is called
     for(my $indx = 0; $indx < @hndz; $indx++) { $scrh{$hndz[$indx]} = $indx; }
   } # generate hash backwards from ShortHands
-  return($scrh{$shrt});
+  if($slow) { return(SlowScoreHand($shrt)); }
+  else      { return(        $scrh{$shrt}); }
+}
+
+sub UseSlow { # toggles the use of SlowScoreHand() instead of ScoreHand()
+  if(@_) { $slow = shift(); } # $new_slow_flag given as param
+  else   { $slow ^= 1;      } # no param so just toggle
+  return($slow);
 }
 
 127;

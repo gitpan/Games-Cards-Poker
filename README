@@ -7,8 +7,8 @@ Games::Cards::Poker - Perl Poker functions
 
 VERSION
 
-This documentation refers to version 1.0.44ILBKV of 
-Games::Cards::Poker, which was released on Sun Apr 18 21:11:20:31 2004.
+This documentation refers to version 1.0.44KFNKP of 
+Games::Cards::Poker, which was released on Tue Apr 20 15:23:20:25 2004.
 
 SYNOPSIS
 
@@ -34,11 +34,6 @@ decks of cards && manipulating them for simple Poker games
 or simulations.
 
 2DO
-
-- benchmark BestHoldEmIndices() + ScoreHand() against
-                  Best()              + Scor()
-
-- rewrite SortCards to be faster (cleaner?) && rerun benchmarks
 
 - mk up sim XML data file format (w/ RELAX NG?)
 
@@ -79,7 +74,10 @@ ShortHand(@hand)
 Returns a scalar string containing the abbreviated Poker description
 of @hand (eg. 'AKQJTs' eq 'Royal Flush', 'QQ993' eq 'Two Pair', etc.).
 
-ScoreHand(@hand)
+ShortHand() calls SortCards() on it's parameter before doing to 
+abbreviation to make sure that the return value is consistent.
+
+SlowScoreHand(@hand)
 
 Returns an integer score (where lower is better) for the passed in 
 Poker @hand.  This means 0 (zero) is returned for a Royal Flush && 
@@ -99,8 +97,29 @@ This function is the opposite of ScoreHand().  It takes an integer
 score paramter && returns the corresponding ShortHand string.
 
 HandScore() uses a fully enumerated table to just index the
-ssociated ShortHand so it should be quite fast.  The table was 
-generated using ScoreHand().
+associated ShortHand so it should be quite fast.  The table was 
+generated using SlowScoreHand().
+
+ScoreHand(@hand)
+
+This is a new version of SlowScoreHand() which does the opposite of
+HandScore() by indexing a ShortHand() key string into a hash of
+corresponding score values.  This faster version should be used for
+any normal hand scoring needs.  If you still want to use the slower
+version, you can call the UseSlow() function to make ScoreHand()
+actually call SlowScoreHand() instead of just indexing the answer
+score in a hash.
+
+UseSlow([$new_slow_flag])
+
+UseSlow() is a function provided in case you'd prefer to actually 
+employ the SlowScoreHand() function whenever you call ScoreHand().
+
+UseSlow() takes an optional $new_slow_flag value.  If you don't 
+provide $new_slow_flag, UseSlow() will toggle the slow state.
+
+UseSlow() always returns the current state of whether 
+SlowScoreHand() is being used whenever ScoreHand() is called.
 
 BestHoldEmIndices(@hole, @board)
 
@@ -109,27 +128,16 @@ indices of the 5 cards (hand) which yield the best score.
 
 BestHoldEmHand(@best, @hole, @board)
 
-BestHoldEmHand() takes the return value of BestHoldEmIndices() 
-(or Best()) as the first parameter (which is an array of the best
-indices) && then the same other parameters to give you a copy of
-just the best cards.  The return value of this function can be
-passed to ScoreHand() to get the score of the best hand in HoldEm.
+BestHoldEmHand() takes the return value of BestHoldEmIndices() as the
+first parameter (which is an array of the best indices) && then the
+same other parameters (@hole && @board) to give you a copy of just
+the best cards.  The return value of this function can be passed to
+ScoreHand() to get the score of the best hand in HoldEm.
 
 BestHoldEmHand() can optionally take just the @hole && @board like
-BestHoldEmIndices() && it will automagically call both properly.
-
-Best(@hole, @board)
-
-This is an older (less flexible but likely faster) version of
-BestHoldEmIndices().  I've kept it in until I can benchmark them
-versus each other to know whether the performance differential is
-negligible.
-
-Scor($short_hand)
-
-This is a new (probably much faster) version of ScoreHand() which 
-does the opposite of HandScore() by indexing a  ShortHand() key 
-string into a hash of corresponding score values.
+BestHoldEmIndices() && it will automagically call BestHoldEmIndices()
+first to obtain @best.  It will then return copies of those indexed
+cards from the @hole && @board.
 
 WHY?
 
@@ -175,6 +183,24 @@ me any suggestions or coding tips or notes of appreciation
 CHANGES
 
 Revision history for Perl extension Games::Cards::Poker:
+
+- 1.0.44KFNKP  Tue Apr 20 15:23:20:25 2004
+
+* wrote UseSlow() so that benchmrk.pl would still work without Best()
+    && in case anyone would rather have ScoreHand() call 
+    SlowScoreHand() every time instead.
+
+* since my old Best() was actually slower than BestHoldEmIndices() =O
+    I removed Best().
+
+* since old Scor() was so much faster than old ScoreHand(), I renamed
+    them to ScoreHand() && SlowScoreHand() respectively since 
+    computational version is unnecessary now.
+
+* wrote benchmrk.pl to test BestHoldEmIndices() + ScoreHand() against
+    Best() + Scor().  Best()+Scor() only took 60% as long to run.
+
+* added SortCards() call on ShortHand() param just in case
 
 - 1.0.44ILBKV  Sun Apr 18 21:11:20:31 2004
 
